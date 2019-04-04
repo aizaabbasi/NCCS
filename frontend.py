@@ -5,7 +5,8 @@ from tabulate import tabulate
 import numpy as np
 
 def initializeTree():
-    tree = {'show': {'contacts': readContacts, 'sms': readSMS}
+    tree = {'show': {'contacts': readContacts, 'sms': readSMS},
+            'make':{'image':makeImage}
     }
 
     return tree
@@ -55,8 +56,12 @@ def readSMS():
     headers = ['Address', 'Content', 'Date Received', 'Date Sent']
     print(tabulate(smsList, headers=headers, tablefmt='fancy_grid'))
 
-
-        
+def makeImage():
+    '''Send request to make android image'''
+    headers = {'Content-type': 'application/json'}
+    url = 'http://127.0.0.1:5000/makeImage'
+    response = requests.post(url, headers=headers)
+    print(response)
 
 
 def main():

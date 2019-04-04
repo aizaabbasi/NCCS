@@ -5,13 +5,19 @@ import sqlalchemy as db
 import sys
 from flask import Flask, jsonify
 import os
+from DataExtraction import get_image
 
 app = Flask(__name__)
+
+@app.route('/makeImage', methods=['POST'])
+def makeImage():
+    get_image.getImage()
+    mountImage()
 
 def mountImage():
     '''Function to mount image file'''
     path = os.getcwd()
-    path = path + '/Data Extraction Scripts/'
+    path = path + '/DataExtraction/'
     mountCommand = "sudo mount -o loop \"" + path + 'android.img\" /mnt/android'
     # if mnt already exists
     if os.path.isdir('/mnt/android'):
@@ -24,6 +30,9 @@ def mountImage():
 # Add route to get contacts
 @app.route('/getContacts', methods=['GET'])
 def readContacts():
+    contactsProc = subprocess.Popen('find /mnt -name contacts2.db', stdout=subprocess.PIPE, shell=True)
+    contactsPath = contactsProc.communicate()[0]
+    contactsPath = contactsPath.decode('utf-8')
     '''Function to read contacts'''
     # Because SQLAlchemy refused to work
     cmd = ''' sqlite3 contacts.db "select view_data.display_name, phone_lookup.normalized_number
@@ -72,8 +81,7 @@ def readSMS():
     return jsonify({'sms':smsList})     # Return JSON
 
 def main():
-    # app.run()
-    mountImage()
+    app.run()
 
 
 if __name__ == "__main__":
