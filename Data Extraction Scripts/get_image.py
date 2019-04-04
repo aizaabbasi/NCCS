@@ -51,7 +51,7 @@ def getProgress(partitionSize):
     fileSize = os.path.getsize(filePath)        # Get size of img file
     partitionSize = int(partitionSize)
     fileSize = int(fileSize)/1024               # Converting to KBs
-
+    print("\n")
     # Keep running till file writing is not complete
     while fileSize < partitionSize:
         fileSize = os.path.getsize(filePath)        # Get size of img file
@@ -63,11 +63,18 @@ def getProgress(partitionSize):
 
     print("\nDone")
 
-def executeCommand(cmd):
+def executeCommand(dataPath, ansi_escape):
     '''Function to execute shell commands'''
-    # Forward to forensic workstation using netcat
-    # subprocess.call(cmd, shell=True)
-    subprocess.Popen(cmd, shell=True)
+    # Get root access
+    rootProcess = subprocess.Popen("adb -d shell", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    rootProcess.stdin.write('su \n'.encode('utf-8'))
+    # dd command
+    ddCmd = 'dd if=' + dataPath + ' | busybox nc -l -p 8888 \n'
+    ddCmd = ansi_escape.sub('',ddCmd)
+    rootProcess.stdin.write(ddCmd.encode('utf-8'))
+    stdout, stderr = rootProcess.communicate()
+    print(stdout.decode('utf-8'))
+    print(stderr.decode('utf-8'))
     
     
 def getImage():
@@ -94,7 +101,7 @@ def getImage():
             path = device.shell(cmd)
             dataPath = getPath(path)
             dataPath = dataPath.strip()
-            print(dataPath)
+            # print(dataPath)
         except Exception as e:
             print('Error getting user data directory')
             print(e)
@@ -114,20 +121,25 @@ def getImage():
             sys.exit(0)
 
         try:
-            # Open ports for forwarding
-            subprocess.call('adb forward tcp:8888 tcp:8888', shell=True)
+            # Kill dd
+            device.shell('su -c pkill -9 dd')
 
-            # dd command
-            ddCmd = 'adb -d shell su -c dd if=' + dataPath + ' | adb -d shell su -c busybox nc -l -p 8888'
-            ddCmd = ansi_escape.sub('',ddCmd)
-            threading.Thread(target=executeCommand, args=(ddCmd,)).start()
+            # Kill nc
+            device.shell('su -c pkill -9 nc')
+
+            # Open ports for forwarding
+            subprocess.Popen('adb forward tcp:8888 tcp:8888', shell=True)
+
+            # Make dd file
+            threading.Thread(target=executeCommand, args=(dataPath, ansi_escape,)).start()
+            time.sleep(0.5)
 
             # Write img file to forensic system
-            ncCmd = 'nc 127.0.0.1 8888 > android.img &'
+            ncCmd = 'nc 127.0.0.1 8888 > android.img'
             subprocess.Popen(ncCmd, shell=True)
-            time.sleep(0.2)
+            time.sleep(0.2)            
 
-            # # Get file writing progress
+            # Get file writing progress
             getProgress(partitionSize)
 
         except Exception as e:
