@@ -3,106 +3,77 @@ from pprint import pprint
 from sqlalchemy import create_engine, MetaData, Table, text, select
 import sqlalchemy as db
 import sys
-from tabulate import tabulate
-import subprocess
-import numpy as np
+from flask import Flask, jsonify
+import os
+
+app = Flask(__name__)
+
+def mountImage():
+    '''Function to mount image file'''
+    path = os.getcwd()
+    path = path + '/Data Extraction Scripts/'
+    mountCommand = "sudo mount -o loop \"" + path + 'android.img\" /mnt/android'
+    # if mnt already exists
+    if os.path.isdir('/mnt/android'):
+        subprocess.call(mountCommand, shell=True)
+    else:       # Create directory
+        subprocess.call('sudo mkdir /mnt/android', shell=True)
+        subprocess.call(mountCommand, shell=True)
 
 
-def initializeTree():
-    tree = {'show': {'contacts': readContacts, 'sms': readSMS}
-    }
-
-    return tree
-
-def traverseTree(root, cmd, index):
-    for k, v in root.items():
-        if index < len(cmd):
-            k = cmd[index]
-            root = root[k]
-            v = root
-            if not callable(v):
-                index += 1
-                traverseTree(root, cmd, index)
-            else:
-                index += 1
-                if index <= len(cmd):
-                    v()
-    
-
-
+# Add route to get contacts
+@app.route('/getContacts', methods=['GET'])
 def readContacts():
     '''Function to read contacts'''
-    # Becase SQLAlchemy refused to work
+    # Because SQLAlchemy refused to work
     cmd = ''' sqlite3 contacts.db "select view_data.display_name, phone_lookup.normalized_number
     from phone_lookup, view_data
     where phone_lookup.raw_contact_id = view_data.raw_contact_id;"'''
+    # Execute query
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
     output = process.communicate()[0]
+    # Get output of query
     output = output.decode('utf-8')
     output = output.split('\n')
+
+    # Get contacts and append to list
     contactsList = []
     for x in output:
         x = x.split("|")
-        contactsList.append(x)
+        try:
+            tempContact = {x[0]:x[1]}
+            contactsList.append(tempContact)
+        except:
+            pass
     
-    contactsList = np.unique(contactsList)
-    headers = ['Name', 'Number']
-    print(tabulate(contactsList, headers=headers, tablefmt='fancy_grid'))
+    # Convert contacts list to JSON
+    return jsonify({'contacts':contactsList})
 
-    # engine = create_engine('sqlite:///contacts.db')
-    # connection = engine.connect()
-    # metadata = db.MetaData()
-    # contacts = db.Table('view_data', metadata, autoload=True, autoload_with=engine)
-    # select_stmt = select([contacts.c.display_name, contacts.c.data1 + "   " + contacts.c.data2 + "   " + contacts.c.data3 + "   " + contacts.c.data4], distinct=True)
-    # result = connection.execute(select_stmt)
-    # finalResult = result.fetchall()
-    # contactsList = []
-    # for x in finalResult:
-    #     contactsList.append(x)
-    
-    # headers = ['Name', 'Data']
-    # print(tabulate(contactsList, headers=headers, tablefmt='fancy_grid'))
-
-
+@app.route('/getSMS', methods=['GET'])
 def readSMS():
     '''Function to read SMS'''
-    engine = create_engine('sqlite:///mmssms.db')
+    # Connect to database
+    engine = create_engine('sqlite:///mmssms.db')   
     connection = engine.connect()
     metadata = db.MetaData()
+    # Get table data
     messages = db.Table('messages', metadata, autoload=True, autoload_with=engine)
     select_stmt = select([messages.c.address, messages.c.content, messages.c.date, messages.c.date_sent])
+    # Execute query
     result = connection.execute(select_stmt)
     finalResult = result.fetchall()
     smsList = []
     for x in finalResult:
-        smsList.append(x)
+        tempSms = {'Address':x.address, 'Content':x.content, 'Date':x.date,'Sent':x.date_sent}
+        smsList.append(tempSms)
 
 
-    smsList = smsList[:100]
-
-    tableHeaders = ['Address','Content', 'Date Recieved', 'Data Sent']
-    print(tabulate(smsList, headers=tableHeaders, tablefmt='fancy_grid'))
-
-    
-
-
+    smsList = smsList[:3]     # Limit to 100 SMS
+    return jsonify({'sms':smsList})     # Return JSON
 
 def main():
-    tree = initializeTree()     # Initialize command tree
-    while True:
-        # Prompt user for command
-        userInput = input("cmd >> ")
-        userInput = ' '.join(userInput.split())
-        # Check if command is exit
-        if userInput == 'exit':
-            sys.exit(0)
-        else:
-            # Traverse command tree according to input
-            tempInput = userInput.split()
-            try:
-                traverseTree(tree, tempInput, 0)
-            except Exception as e:
-                print("Invalid Command")
+    # app.run()
+    mountImage()
 
 
 if __name__ == "__main__":
