@@ -3,44 +3,78 @@ from pprint import pprint
 from sqlalchemy import create_engine, MetaData, Table, text, select
 import sqlalchemy as db
 import sys
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import os
 from DataExtraction import get_image
+import json
 
 app = Flask(__name__)
 
-@app.route('/makeImage', methods=['POST'])
-def makeImage():
-    get_image.getImage()
-    mountImage()
+password = ''
 
-def mountImage():
+@app.route('/getPassword', methods=['POST'])
+def getPassword():
+    response = request.json
+    global password
+    password = response['password']
+    return "OK", 200
+
+@app.route('/makeImage', methods=['GET'])
+def makeImage():
+    # Get password
+    # response = request.json
+    # password = response['password']
+    # get_image.getImage()    # Make image
+    mountImage(password)    # Mount image
+    return "OK", 200
+
+def mountImage(password):
     '''Function to mount image file'''
     path = os.getcwd()
-    path = path + '/DataExtraction/'
-    mountCommand = "sudo mount -o loop \"" + path + 'android.img\" /mnt/android'
+    mountCommand = "mount -o loop \"" + path + '/android.img\" /mnt/android'
     # if mnt already exists
+    unmountCmd = 'umount /mnt/android'
     if os.path.isdir('/mnt/android'):
-        subprocess.call(mountCommand, shell=True)
+        # Unmount image
+        try:
+            subprocess.call('echo {} | sudo -S {}'.format(password, unmountCmd), shell=True)
+        except:
+            pass
+        # Mount image
+        try:
+            subprocess.call('echo {} | sudo -S {}'.format(password, mountCommand), shell=True)
+        except:
+            pass
+        
     else:       # Create directory
-        subprocess.call('sudo mkdir /mnt/android', shell=True)
-        subprocess.call(mountCommand, shell=True)
+        # Unmount image
+        try:
+            subprocess.call('echo {} | sudo -S {}'.format(password, unmountCmd), shell=True)
+        except:
+            pass
+        # Mount image
+        try:
+            subprocess.call('echo {} | sudo -S {}'.format(password, mountCommand), shell=True)
+        except:
+            pass
 
 
 # Add route to get contacts
 @app.route('/getContacts', methods=['GET'])
 def readContacts():
-    contactsProc = subprocess.Popen('find /mnt -name contacts2.db', stdout=subprocess.PIPE, shell=True)
-    contactsPath = contactsProc.communicate()[0]
-    contactsPath = contactsPath.decode('utf-8')
     '''Function to read contacts'''
+    findCommand = "find /mnt -name contacts2.db"
+    contactsPath = subprocess.check_output('echo {} | sudo -S {}'.format(password,findCommand), shell=True)
+    contactsPath = contactsPath.decode('utf-8')
     # Because SQLAlchemy refused to work
-    cmd = ''' sqlite3 contacts.db "select view_data.display_name, phone_lookup.normalized_number
+    # cmd = 'sqlite3 ' +  contactsPath + '''select view_data.display_name, phone_lookup.normalized_number
+    # from phone_lookup, view_data
+    # where phone_lookup.raw_contact_id = view_data.raw_contact_id;"'''
+    cmd = '''sqlite3 contacts.db "select view_data.display_name, phone_lookup.normalized_number
     from phone_lookup, view_data
     where phone_lookup.raw_contact_id = view_data.raw_contact_id;"'''
     # Execute query
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-    output = process.communicate()[0]
+    output = subprocess.check_output('echo {} | sudo -S {}'.format(password, cmd), shell=True)
     # Get output of query
     output = output.decode('utf-8')
     output = output.split('\n')
@@ -61,6 +95,12 @@ def readContacts():
 @app.route('/getSMS', methods=['GET'])
 def readSMS():
     '''Function to read SMS'''
+    findCommand = "find /mnt -name mmssms.db"
+    smsPath = subprocess.check_output('echo {} | sudo -S {}'.format(password,findCommand), shell=True)
+    smsPath = smsPath.decode('utf-8')
+    # Copy file
+    copyCommand = 'cp ' + smsPath + " " + os.getcwd()
+    copyProc = subprocess.call('echo {} | sudo -S {}'.format(password,copyCommand), shell=True)
     # Connect to database
     engine = create_engine('sqlite:///mmssms.db')   
     connection = engine.connect()
@@ -82,6 +122,7 @@ def readSMS():
 
 def main():
     app.run()
+    # mountImage()
 
 
 if __name__ == "__main__":
