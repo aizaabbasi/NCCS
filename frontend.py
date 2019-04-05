@@ -3,6 +3,9 @@ import requests
 import json
 from tabulate import tabulate
 import numpy as np
+from yaspin import yaspin
+import time
+from yaspin.spinners import Spinners
 
 def initializeTree():
     tree = {'show': {'contacts': readContacts, 'sms': readSMS},
@@ -19,7 +22,7 @@ def traverseTree(root, cmd, index):
             v = root
             if not callable(v):
                 index += 1
-                traverseTree(root, cmd, index)
+                return traverseTree(root, cmd, index)
             else:
                 index += 1
                 if index <= len(cmd):
@@ -60,11 +63,25 @@ def makeImage():
     '''Send request to make android image'''
     headers = {'Content-type': 'application/json'}
     url = 'http://127.0.0.1:5000/makeImage'
-    response = requests.post(url, headers=headers)
+    spinner = yaspin(Spinners.simpleDots, text='Creating Image')
+    spinner.start()
+    response = requests.get(url)
+    print()
+    print(response)
+    spinner.stop()
+
+def getPassword():
+    '''Get root password'''
+    headers = {'Content-type': 'application/json'}
+    url = 'http://127.0.0.1:5000/getPassword'
+    password = input('Password: ')
+    data = {'password':password}
+    response = requests.post(url, json.dumps(data), headers=headers)
     print(response)
 
 
 def main():
+    getPassword()
     tree = initializeTree()     # Initialize command tree
     while True:
         # Prompt user for command
