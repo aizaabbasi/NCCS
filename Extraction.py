@@ -12,6 +12,15 @@ app = Flask(__name__)
 
 password = ''
 
+def executeCommand(passwd,command):
+    '''Execute sudo command'''
+    output = subprocess.check_output('echo {} | sudo -S {}'.format(passwd,command), shell=True)
+    output = output.decode('utf-8')
+    output = output.split('\n')
+    output = output[0]
+    output = output.replace('\n','')
+    return output 
+
 @app.route('/getPassword', methods=['POST'])
 def getPassword():
     response = request.json
@@ -26,7 +35,7 @@ def makeImage():
     # password = response['password']
     # get_image.getImage()    # Make image
     mountImage(password)    # Mount image
-    return "OK", 200
+    return jsonify({'OK': 'OK'})
 
 def mountImage(password):
     '''Function to mount image file'''
@@ -96,11 +105,12 @@ def readContacts():
 def readSMS():
     '''Function to read SMS'''
     findCommand = "find /mnt -name mmssms.db"
-    smsPath = subprocess.check_output('echo {} | sudo -S {}'.format(password,findCommand), shell=True)
-    smsPath = smsPath.decode('utf-8')
+    # smsPath = subprocess.check_output('echo {} | sudo -S {}'.format(password,findCommand), shell=True)
+    smsPath = executeCommand(password, findCommand)
     # Copy file
-    copyCommand = 'cp ' + smsPath + " " + os.getcwd()
-    copyProc = subprocess.call('echo {} | sudo -S {}'.format(password,copyCommand), shell=True)
+    copyCommand = 'cp ' + smsPath + ' \"' + os.getcwd() + '\"'
+    # subprocess.call('echo {} | sudo -S {}'.format(password,copyCommand), shell=True)
+    executeCommand(password, copyCommand)
     # Connect to database
     engine = create_engine('sqlite:///mmssms.db')   
     connection = engine.connect()
@@ -117,8 +127,33 @@ def readSMS():
         smsList.append(tempSms)
 
 
-    smsList = smsList[:3]     # Limit to 100 SMS
+    smsList = smsList[:3]     # Limit to x number of SMS
     return jsonify({'sms':smsList})     # Return JSON
+
+@app.route('/getLogs', methods=['GET'])
+def getCallLogs():
+    '''Get call logs'''
+    findCmd = 'find /mnt -name calllog.db'
+    logsPath = executeCommand(password,findCmd)
+    copyCommand = 'cp ' + logsPath + ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
+    # Connect to database
+    engine = create_engine('sqlite:///calllog.db')   
+    connection = engine.connect()
+    metadata = db.MetaData()
+    # Get table data
+    messages = db.Table('calls', metadata, autoload=True, autoload_with=engine)
+    select_stmt = select([messages.c.name, messages.c.number, messages.c.date, messages.c.duration])
+    # Execute query
+    result = connection.execute(select_stmt)
+    finalResult = result.fetchall()
+    callLogsList = []
+    for x in finalResult:
+        tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
+        callLogsList.append(tempLog)
+
+    return jsonify({'calllogs':callLogsList})     # Return JSON
+
 
 def main():
     app.run()
