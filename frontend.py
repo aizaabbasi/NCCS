@@ -6,10 +6,21 @@ import numpy as np
 from yaspin import yaspin
 import time
 from yaspin.spinners import Spinners
+import yaml
+import os
+from pprint import pprint
+from datetime import datetime
 
 def initializeTree():
-    tree = {'show': {'contacts': readContacts, 'sms': readSMS},
-            'make':{'image':makeImage}
+    tree = {'show': 
+                {'contacts': readContacts,
+                 'sms': readSMS,
+                 'help': showHelp,
+                 'logs': showLogs
+                 },
+            'make':
+                {'image':makeImage
+                }
     }
 
     return tree
@@ -28,12 +39,33 @@ def traverseTree(root, cmd, index):
                 if index <= len(cmd):
                     v()
 
+def getResponse(path):
+    '''Get response from server'''
+    url = 'http://127.0.0.1:5000/' + path
+    response = requests.get(url)
+    finalResponse = json.loads(response.content)
+    return finalResponse
+
+def showHelp():
+    '''Display help'''
+    path = os.getcwd()          # Get current working directory
+    path = path + '/help.yaml'  # Get path of help file
+    help = None
+    # Open and print help file
+    with open(path,'r') as stream:
+        try:
+            help = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    for k,v in help.items():
+        print(k + "  ---  " + v)
+
 def readContacts():
+    '''Get list of contacts'''
     contactsList = []
     # Get response from URL
-    response = requests.get('http://127.0.0.1:5000/getContacts')
-    # Get JSON response
-    contacts = json.loads(response.content)
+    contacts = getResponse('getContacts')
     # Get contacts
     contacts = contacts['contacts']
     for contact in contacts:
@@ -47,25 +79,36 @@ def readContacts():
 
 
 def readSMS():
+    '''Get list of text messages'''
     smsList = []
     # Get response from URL
-    response = requests.get('http://127.0.0.1:5000/getSMS')
-    # Get JSON response
-    sms = json.loads(response.content)
+    sms = getResponse('getSMS')
     sms = sms['sms']
     for x in sms:
-        smsList.append([x['Address'],x['Content'],x['Date'],x['Sent']])
+        smsList.append([x['Address'],x['Content'],datetime.fromtimestamp(x['Date']/1e3),datetime.fromtimestamp(x['Sent']/1e3)])
 
     headers = ['Address', 'Content', 'Date Received', 'Date Sent']
     print(tabulate(smsList, headers=headers, tablefmt='fancy_grid'))
 
+def showLogs():
+    '''Get list of call logs'''
+    callLogsList = []
+    # Get response from url
+    response = getResponse('getLogs')
+    callLogs = response['calllogs']
+    for x in callLogs:
+        callLogsList.append([x['Name'],x['Number'],datetime.fromtimestamp(x['Date']/1e3),x['Duration'] + 's'])
+
+    headers = ['Name', 'Number', 'Date', 'Duration']
+    print(tabulate(callLogsList, headers=headers, tablefmt='fancy_grid'))
+
+
 def makeImage():
     '''Send request to make android image'''
     headers = {'Content-type': 'application/json'}
-    url = 'http://127.0.0.1:5000/makeImage'
     spinner = yaspin(Spinners.simpleDots, text='Creating Image')
     spinner.start()
-    response = requests.get(url)
+    response = getResponse('makeImage')
     print()
     print(response)
     spinner.stop()
