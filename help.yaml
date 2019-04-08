@@ -1,5 +1,7 @@
+'show help': 'Show supported commands and their descriptions'
 'show contacts': 'Show list of contacts'
 'show sms': 'Show list of text messages'
 'show logs': 'Show call logs'
 'make image': 'Make image android device' 
+'exit': 'Close the program'
 
