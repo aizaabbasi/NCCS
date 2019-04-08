@@ -10,6 +10,8 @@ import yaml
 import os
 from pprint import pprint
 from datetime import datetime
+from getpass import getpass
+import readline
 
 def initializeTree():
     tree = {'show': 
@@ -58,8 +60,13 @@ def showHelp():
         except yaml.YAMLError as exc:
             print(exc)
 
+    helpList = []
     for k,v in help.items():
-        print(k + "  ---  " + v)
+        helpList.append([k,v])
+
+    headers = ['Command', 'Description']
+    print(tabulate(helpList, headers=headers, tablefmt='rst'))
+    
 
 def readContacts():
     '''Get list of contacts'''
@@ -97,7 +104,7 @@ def showLogs():
     response = getResponse('getLogs')
     callLogs = response['calllogs']
     for x in callLogs:
-        callLogsList.append([x['Name'],x['Number'],datetime.fromtimestamp(x['Date']/1e3),x['Duration'] + 's'])
+        callLogsList.append([x['Name'],x['Number'],datetime.fromtimestamp(x['Date']/1e3),str(x['Duration']) + 's'])
 
     headers = ['Name', 'Number', 'Date', 'Duration']
     print(tabulate(callLogsList, headers=headers, tablefmt='fancy_grid'))
@@ -110,17 +117,17 @@ def makeImage():
     spinner.start()
     response = getResponse('makeImage')
     print()
-    print(response)
+    # print(response)
     spinner.stop()
 
 def getPassword():
     '''Get root password'''
     headers = {'Content-type': 'application/json'}
     url = 'http://127.0.0.1:5000/getPassword'
-    password = input('Password: ')
+    password = getpass('Root Password: ')
     data = {'password':password}
     response = requests.post(url, json.dumps(data), headers=headers)
-    print(response)
+    # print(response)
 
 
 def main():
