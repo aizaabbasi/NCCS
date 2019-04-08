@@ -7,6 +7,7 @@ from flask import Flask, jsonify, request
 import os
 from DataExtraction import get_image
 import json
+import readline
 
 app = Flask(__name__)
 
@@ -33,7 +34,7 @@ def makeImage():
     # Get password
     # response = request.json
     # password = response['password']
-    # get_image.getImage()    # Make image
+    get_image.getImage()    # Make image
     mountImage(password)    # Mount image
     return jsonify({'OK': 'OK'})
 
