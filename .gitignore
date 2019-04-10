@@ -1,0 +1,12 @@
+
+*.img
+
+*.db
+
+*.sql
+
+*.pyc
+
+*.db-shm
+
+*.db-wal
