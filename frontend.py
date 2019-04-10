@@ -18,7 +18,8 @@ def initializeTree():
                 {'contacts': readContacts,
                  'sms': readSMS,
                  'help': showHelp,
-                 'logs': showLogs
+                 'logs': showLogs,
+                 'locations': showLocations
                  },
             'make':
                 {'image':makeImage
@@ -108,6 +109,18 @@ def showLogs():
 
     headers = ['Name', 'Number', 'Date', 'Duration']
     print(tabulate(callLogsList, headers=headers, tablefmt='fancy_grid'))
+
+def showLocations():
+    '''Get list of whatsapp locations'''
+    locationsList = []
+    # Get response from url
+    response = getResponse('getLocations')
+    locations = response['locations']
+    for x in locations:
+        locationsList.append([x['Latitude'],x['Longitude']])
+
+    headers = ['Latitude', 'Longitude']
+    print(tabulate(locationsList, headers=headers, tablefmt='fancy_grid'))
 
 
 def makeImage():
