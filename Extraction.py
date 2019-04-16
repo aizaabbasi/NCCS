@@ -73,7 +73,7 @@ def mountImage(password):
 @app.route('/getContacts', methods=['GET'])
 def readContacts():
     '''Function to read contacts'''
-    findCommand = "find /mnt -name contacts2.db"
+    findCommand = "find /mnt/android -name contacts2.db"
     contactsPath = subprocess.check_output('echo {} | sudo -S {}'.format(password,findCommand), shell=True)
     contactsPath = contactsPath.decode('utf-8')
     # Because SQLAlchemy refused to work
@@ -105,7 +105,7 @@ def readContacts():
 @app.route('/getSMS', methods=['GET'])
 def readSMS():
     '''Function to read SMS'''
-    findCommand = "find /mnt -name mmssms.db"
+    findCommand = "find /mnt/android -name mmssms.db"
     # smsPath = subprocess.check_output('echo {} | sudo -S {}'.format(password,findCommand), shell=True)
     smsPath = executeCommand(password, findCommand)
     # Copy file
@@ -134,7 +134,7 @@ def readSMS():
 @app.route('/getLogs', methods=['GET'])
 def getCallLogs():
     '''Get call logs'''
-    findCmd = 'find /mnt -name calllog.db'
+    findCmd = 'find /mnt/android -name calllog.db'
     logsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + logsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
@@ -155,10 +155,10 @@ def getCallLogs():
 
     return jsonify({'calllogs':callLogsList})     # Return JSON
 
-@app.route('/getLocations', methods=['GET'])
+@app.route('/getWhatsappLocations', methods=['GET'])
 def getCallLocations():
     '''Get whatsapp locations'''
-    findCmd = 'find /mnt -name msgstore.db'
+    findCmd = 'find /mnt/android -name msgstore.db'
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
@@ -176,6 +176,31 @@ def getCallLocations():
     for x in finalResult:
         if (x.latitude != 0) or (x.longitude != 0):
             tempLoc = {'Latitude':x.latitude,'Longitude':x.longitude}
+            locationsList.append(tempLoc)
+
+    return jsonify({'locations':locationsList})     # Return JSON
+
+@app.route('/getLocations', methods=['GET'])
+def getLocations():
+    '''Get whatsapp locations'''
+    findCmd = 'find /mnt/android -name gmm_sync.db'
+    locationsPath = executeCommand(password,findCmd)
+    copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
+    # Connect to database
+    engine = create_engine('sqlite:///gmm_sync.db')   
+    connection = engine.connect()
+    metadata = db.MetaData()
+    # Get table data
+    messages = db.Table('sync_item_data', metadata, autoload=True, autoload_with=engine)
+    select_stmt = select([messages.c.latitude_e6, messages.c.longitude_e6])
+    # Execute query
+    result = connection.execute(select_stmt)
+    finalResult = result.fetchall()
+    locationsList = []
+    for x in finalResult:
+        if (x.latitude_e6 != 0) or (x.longitude_e6 != 0):
+            tempLoc = {'Latitude':(x.latitude_e6/1e6),'Longitude':(x.longitude_e6/1e6)}
             locationsList.append(tempLoc)
 
     return jsonify({'locations':locationsList})     # Return JSON
