@@ -114,9 +114,15 @@ def showLocations():
     '''Get list of whatsapp locations'''
     locationsList = []
     # Get response from url
-    response = getResponse('getLocations')
+    response = getResponse('getWhatsappLocations')
     locations = response['locations']
     for x in locations:
+        locationsList.append([x['Latitude'],x['Longitude']])
+
+    # Get response from second URL
+    response2 = getResponse('getLocations')
+    locations2 = response2['locations']
+    for x in locations2:
         locationsList.append([x['Latitude'],x['Longitude']])
 
     headers = ['Latitude', 'Longitude']
