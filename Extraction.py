@@ -3,11 +3,18 @@ from pprint import pprint
 from sqlalchemy import create_engine, MetaData, Table, text, select
 import sqlalchemy as db
 import sys
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template, redirect, url_for
 import os
 from DataExtraction import get_image
 import json
 import readline
+from flask_table import Table, Col
+
+# Declare your table
+class ContactsTable(Table):
+    name = Col('Name')
+    number = Col('Number')
+
 
 app = Flask(__name__)
 
@@ -24,10 +31,11 @@ def executeCommand(passwd,command):
 
 @app.route('/getPassword', methods=['POST'])
 def getPassword():
-    response = request.json
     global password
-    password = response['password']
-    return "OK", 200
+    password = request.form['password']
+    print(password)
+    return render_template("Content.html")
+
 
 @app.route('/makeImage', methods=['GET'])
 def makeImage():
@@ -94,13 +102,16 @@ def readContacts():
     for x in output:
         x = x.split("|")
         try:
-            tempContact = {x[0]:x[1]}
+            # tempContact = {x[0]:x[1]}
+            tempContact = dict(name=x[0],number=x[1])
             contactsList.append(tempContact)
         except:
             pass
     
     # Convert contacts list to JSON
-    return jsonify({'contacts':contactsList})
+    # return jsonify({'contacts':contactsList})
+    table = ContactsTable(contactsList)
+    return render_template("contacts.html", contactsList=table)
 
 @app.route('/getSMS', methods=['GET'])
 def readSMS():
@@ -205,6 +216,9 @@ def getLocations():
 
     return jsonify({'locations':locationsList})     # Return JSON
 
+@app.route("/")
+def index():
+    return render_template("login.html")
 
 def main():
     app.run()
