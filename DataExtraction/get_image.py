@@ -16,14 +16,24 @@ def getByNamePath(paths):
 
     return finalPath
 
+def getSDCardPath(paths):
+    '''Get SD Card path'''
+    paths = paths.split('\n')
+    finalPath = None
+    for x in paths:
+        if x == '/sdcard':
+            finalPath = x
 
-def getPath(paths):
+    return finalPath
+
+
+def getPath(paths, findPath):
     '''Function to get path of userdata directory'''
     paths = paths.split('\n')
     path = None
     for x in paths:
         # Search for USERDATA
-        if 'USERDATA' in x:
+        if findPath in x:
             temp = x.split('->')    # Get path of userdata
             path = temp[-1]
 
@@ -70,14 +80,16 @@ def executeCommand(dataPath, ansi_escape):
     rootProcess.stdin.write('su \n'.encode('utf-8'))
     # dd command
     ddCmd = 'dd if=' + dataPath + ' | busybox nc -l -p 8888 \n'
-    ddCmd = ansi_escape.sub('',ddCmd)
+    try:
+        ddCmd = ansi_escape.sub('',ddCmd)
+    except:
+        pass
     rootProcess.stdin.write(ddCmd.encode('utf-8'))
     stdout, stderr = rootProcess.communicate()
     print(stdout.decode('utf-8'))
     print(stderr.decode('utf-8'))
     
-    
-def getImage():
+def getDevice():
     # Start adb
     subprocess.call('adb start-server', shell=True)
     # Connect to adb
@@ -91,68 +103,72 @@ def getImage():
         devices = devices[0]
         serialNumber = devices.get_serial_no()
         device = client.device(serialNumber)
-
-        # Get path of data directory
-        try:
-            tempPath = device.shell('su -c find / -name by-name')
-            tempPath = getByNamePath(tempPath)
-            tempPath = tempPath.replace('\r','')
-            cmd = 'su -c ls -al ' + tempPath
-            path = device.shell(cmd)
-            dataPath = getPath(path)
-            dataPath = dataPath.strip()
-            # print(dataPath)
-        except Exception as e:
-            print('Error getting user data directory')
-            print(e)
-            sys.exit(0)
-
-        try:
-            # Get partition size
-            tempPartition = dataPath.split('/')
-            userPartition = tempPartition[-1]                       # Get user data partition
-            ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
-            userPartition = ansi_escape.sub('',userPartition)       # Remove ANSI
-            partitions = device.shell('cat /proc/partitions')       # Get all partitions
-            partitionSize = getPartitionSize(partitions,userPartition)
-        except Exception as e:
-            print('Error getting partitions')
-            print(e)
-            sys.exit(0)
-
-        try:
-            # Kill dd
-            device.shell('su -c pkill -9 dd')
-
-            # Kill nc
-            device.shell('su -c pkill -9 nc')
-
-            # Open ports for forwarding
-            subprocess.Popen('adb forward tcp:8888 tcp:8888', shell=True)
-
-            # Make dd file
-            threading.Thread(target=executeCommand, args=(dataPath, ansi_escape,)).start()
-            time.sleep(0.5)
-
-            # Write img file to forensic system
-            ncCmd = 'nc 127.0.0.1 8888 > android.img'
-            subprocess.Popen(ncCmd, shell=True)
-            time.sleep(0.2)            
-
-            # Get file writing progress
-            getProgress(partitionSize)
-
-        except Exception as e:
-            print(e)
-            sys.exit(0)       
-
-
-def main():
+        return device
+    
+def getImage(device):
+    # Get path of data directory
     try:
-        getImage()
+        tempPath = device.shell('su -c find / -name by-name')
+        tempPath = getByNamePath(tempPath)
+        tempPath = tempPath.replace('\r','')
+        cmd = 'su -c ls -al ' + tempPath
+        path = device.shell(cmd)
+        dataPath = getPath(path, 'USERDATA')
+        dataPath = dataPath.strip()
+        # print(dataPath)
+    except Exception as e:
+        print('Error getting user data directory')
+        print(e)
+        sys.exit(0)
+
+    try:
+        # Get partition size
+        tempPartition = dataPath.split('/')
+        userPartition = tempPartition[-1]                       # Get user data partition
+        ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+        userPartition = ansi_escape.sub('',userPartition)       # Remove ANSI
+        partitions = device.shell('cat /proc/partitions')       # Get all partitions
+        partitionSize = getPartitionSize(partitions,userPartition)
+    except Exception as e:
+        print('Error getting partitions')
+        print(e)
+        sys.exit(0)
+
+    try:
+        # Kill dd
+        device.shell('su -c pkill -9 dd')
+
+        # Kill nc
+        device.shell('su -c pkill -9 nc')
+
+        # Open ports for forwarding
+        subprocess.Popen('adb forward tcp:8888 tcp:8888', shell=True)
+
+        # Make dd file
+        threading.Thread(target=executeCommand, args=(dataPath, ansi_escape,)).start()
+        time.sleep(0.5)
+
+        # Write img file to forensic system
+        ncCmd = 'nc 127.0.0.1 8888 > android.img'
+        subprocess.Popen(ncCmd, shell=True)
+        time.sleep(0.2)            
+
+        # Get file writing progress
+        getProgress(partitionSize)
+
     except Exception as e:
         print(e)
+        sys.exit(0)       
 
-
-if __name__ == "__main__":
-    main()
+def getSDCard(device):
+    '''Function to copy SD Card contents'''
+    # Get path of sdcard directory
+    try:
+        tempPath = device.shell('su -c find / -name sdcard')
+        tempPath = tempPath.replace('\r','')
+        tempPath = getSDCardPath(tempPath)
+        cmd = 'adb pull ' + tempPath
+        subprocess.call(cmd, shell=True)    # Pull sd card directory
+    except Exception as e:
+        print('SD Card directory not found')
+        print(e)

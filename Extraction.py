@@ -34,7 +34,8 @@ def makeImage():
     # Get password
     # response = request.json
     # password = response['password']
-    get_image.getImage()    # Make image
+    client = get_image.getDevice()    # Start adb client
+    get_image.getImage(client)    # Make image
     mountImage(password)    # Mount image
     return jsonify({'OK': 'OK'})
 
