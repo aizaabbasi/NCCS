@@ -10,16 +10,33 @@ import json
 import readline
 from flask_table import Table, Col
 import numpy as np
+from gmplot import gmplot
 
-# Declare your table
+# Contacts table
 class ContactsTable(Table):
     classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
     name = Col('Name')
     number = Col('Number')
 
+# SMS table
+class SMSTable(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    number = Col('Number')
+    content = Col('Content')
+    dateReceived = Col('Date Received')
+    dateSent = Col('Date Sent')
+
+# SMS table
+class CallLogsTable(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    name = Col('Name')
+    number = Col('Number')
+    date = Col('Date')
+    duration = Col('Duration (s)')
+
 app = Flask(__name__)
 
-password = ''
+password = 'asim'
 
 def executeCommand(passwd,command):
     '''Execute sudo command'''
@@ -120,7 +137,7 @@ def readContacts():
     # return jsonify({'contacts':contactsList})
     table = ContactsTable(contactsList)
     # return render_template('contacts.html',contactsList=table)
-    return jsonify(contactsList)
+    return jsonify(table)
 
 @app.route('/getSMS', methods=['GET'])
 def readSMS():
@@ -144,12 +161,15 @@ def readSMS():
     finalResult = result.fetchall()
     smsList = []
     for x in finalResult:
-        tempSms = {'Address':x.address, 'Content':x.content, 'Date':x.date,'Sent':x.date_sent}
+        # tempSms = {'Address':x.address, 'Content':x.content, 'Date':x.date,'Sent':x.date_sent}
+        tempSms = dict(number=x[0],content=x[1],dateReceived=x[2],dateSent=x[3])
         smsList.append(tempSms)
 
 
-    smsList = smsList[:3]     # Limit to x number of SMS
-    return jsonify({'sms':smsList})     # Return JSON
+    smsList = smsList[:50]     # Limit to x number of SMS
+    table = SMSTable(smsList)
+    return jsonify(table)       # Return table
+    # return jsonify({'sms':smsList})     # Return JSON
 
 @app.route('/getLogs', methods=['GET'])
 def getCallLogs():
@@ -170,10 +190,13 @@ def getCallLogs():
     finalResult = result.fetchall()
     callLogsList = []
     for x in finalResult:
-        tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
+        # tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
+        tempLog = dict(name=x[0],number=x[1],date=x[2],duration=x[3])
         callLogsList.append(tempLog)
 
-    return jsonify({'calllogs':callLogsList})     # Return JSON
+    table = CallLogsTable(callLogsList)
+    return jsonify(table)
+    # return jsonify({'calllogs':callLogsList})     # Return JSON
 
 @app.route('/getWhatsappLocations', methods=['GET'])
 def getCallLocations():
@@ -202,7 +225,7 @@ def getCallLocations():
 
 @app.route('/getLocations', methods=['GET'])
 def getLocations():
-    '''Get whatsapp locations'''
+    '''Get locations'''
     findCmd = 'find /mnt/android -name gmm_sync.db'
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
@@ -220,10 +243,21 @@ def getLocations():
     locationsList = []
     for x in finalResult:
         if (x.latitude_e6 != 0) or (x.longitude_e6 != 0):
-            tempLoc = {'Latitude':(x.latitude_e6/1e6),'Longitude':(x.longitude_e6/1e6)}
+            # tempLoc = {'Latitude':(x.latitude_e6/1e6),'Longitude':(x.longitude_e6/1e6)}
+            tempLoc = (x.latitude_e6/1e6, x.longitude_e6/1e6)
             locationsList.append(tempLoc)
 
-    return jsonify({'locations':locationsList})     # Return JSON
+    lats,longs = zip(*locationsList)
+    # Place map
+    gmap = gmplot.GoogleMapPlotter(33.6007, 73.0679, 13)
+   
+
+    gmap.heatmap(lats, longs)
+    # gmap.scatter(top_attraction_lats, top_attraction_lons, '#3B0B39', size=40, marker=False)
+    gmap.draw('templates/map.html')
+
+    return jsonify({'status':'OK'})
+    # return jsonify({'locations':locationsList})     # Return JSON
 
 @app.route("/")
 def index():
