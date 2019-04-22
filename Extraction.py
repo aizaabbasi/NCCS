@@ -9,12 +9,13 @@ from DataExtraction import get_image
 import json
 import readline
 from flask_table import Table, Col
+import numpy as np
 
 # Declare your table
 class ContactsTable(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
     name = Col('Name')
     number = Col('Number')
-
 
 app = Flask(__name__)
 
@@ -34,7 +35,8 @@ def getPassword():
     global password
     password = request.form['password']
     print(password)
-    return render_template("Content.html")
+    return render_template("sidebar.html")
+    
 
 
 @app.route('/makeImage', methods=['GET'])
@@ -67,7 +69,7 @@ def mountImage(password):
     else:       # Create directory
         # Unmount image
         try:
-            subprocess.call('echo {} | sudo -S {}'.format(password, unmountCmd), shell=True)
+            subprocess.call('echo {} getPassword| sudo -S {}'.format(password, unmountCmd), shell=True)
         except:
             pass
         # Mount image
@@ -96,22 +98,29 @@ def readContacts():
     # Get output of query
     output = output.decode('utf-8')
     output = output.split('\n')
+    filterList = []
 
     # Get contacts and append to list
     contactsList = []
     for x in output:
         x = x.split("|")
         try:
+            filterStr = x[0] + "~" + x[1]
             # tempContact = {x[0]:x[1]}
-            tempContact = dict(name=x[0],number=x[1])
-            contactsList.append(tempContact)
+            if not (filterStr in filterList):
+                tempContact = dict(name=x[0],number=x[1])
+                contactsList.append(tempContact)
+
+            filterList.append(filterStr)
         except:
             pass
-    
+
+    filterList = []
     # Convert contacts list to JSON
     # return jsonify({'contacts':contactsList})
     table = ContactsTable(contactsList)
-    return render_template("contacts.html", contactsList=table)
+    # return render_template('contacts.html',contactsList=table)
+    return jsonify(contactsList)
 
 @app.route('/getSMS', methods=['GET'])
 def readSMS():
