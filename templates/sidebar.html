@@ -1,63 +1,49 @@
-<!DOCTYPE html>
-<html>
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
 
-<!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
 
-<!-- jQuery library -->
-<script src="https://code.jquery.com/jquery-3.4.0.js" integrity="sha256-DYZMCC8HTC+QDr5QNaIcfR7VSPtcISykd+6eSmBW5qo=" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='view.css') }}">         <!-- Login page css-->
-<link rel="stylesheet" href="{{ url_for('static', filename='sidebar.css') }}">      <!-- Sidebar css-->
+<link rel="stylesheet" href="{{ url_for('static', filename='view.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='sidebar.css') }}">
+<!------ Include the above in your HEAD tag ---------->
 
-    <head>
-        
-        <title>Mobile Device Forensics</title>
-    </head>
+<head>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.css" rel="stylesheet"/>
+</head>
+<body>
+    <!-- Header-->
+    {% include 'header.html' %}
+    <div class="container-fluid">
+        <div class="row">    
+            <div id="admin-sidebar" class="col-md-2 p-x-0 p-y-3">
+                <ul class="sidenav admin-sidenav list-unstyled">
+                    <li><a id="contacts" href="#">Contacts</a></li>
+                    <li><a id="sms" href="#">SMS</a></li>
+                    <li><a id="call-logs" href="#">Call Logs</a></li>
+                    <!-- <li><a id="locations" href="#">Locations</a></li>    -->
+                    <!-- Locations dropdown start -->
+                    <li>
+                        <a class="accordion-toggle collapsed toggle-switch" data-toggle="collapse" href="#submenu-2">
+                            <span class="sidebar-icon"></span>
+                            <span class="sidebar-title">Locations</span>
+                            <b class="caret"></b>
+                        </a>
+                        <ul id="submenu-2" class="panel-collapse collapse panel-switch" role="menu">
+                            <li><a id="locations" href="#"><i class="fa fa-caret-right"></i>Google Maps</a></li>
+                            <li><a id="whatsapp" href="#"><i class="fa fa-caret-right"></i>Whatsapp</a></li>
+                        </ul>
+                    </li>
+                    <!-- Locations dropdown end  -->
+                </ul>
+            </div> <!-- /#admin-sidebar -->
+            <div id="admin-main-control" class="col-md-10 p-x-3 p-y-1">
+                <div id="contactsTable"></div>
+            </div> <!-- /#admin-main-control -->
+        </div> <!-- /.row -->
+    </div> <!-- /.container-fluid -->
 
-    <body>
-
-        <!-- Header-->
-        {% include 'header.html' %}
-
-        <div class="container-fluid">
-                <div class="row">
-                <!-- Sidebar column start -->
-                    <div class="col-md-2">
-                        <div class="btn-group-vertical" role="group">
-                            <button id="contacts" class="btn btn-primary">Contacts</button>
-                            <button id="sms" class="btn btn-primary">SMS</button>
-                            <button id="call-logs" class="btn btn-primary">Call Logs</button>
-                            <button id= "locations" class="btn btn-primary">Locations</button>
-                        </div>
-                    </div>  <!-- Sidebar column end-->
-
-                    <!-- Content column start -->
-                    <div class="col-md-10">
-                        <div id="page-content-wrapper">
-                                <div class="container-fluid">
-                                    <div id="contactsTable"></div>
-                                        <!-- <iframe src="{{ url_for('static', filename='map.html') }}"></iframe>  -->
-                                </div>
-                        </div> <!-- /#page-content-wrapper -->
-                    </div>     <!-- Content column end--> 
-                </div>  <!-- Row end-->
-        </div>          <!-- Container end-->
-
-        <script type="text/javascript" src="{{ url_for('static', filename='data.js') }}"></script>
-        <!-- <script type="text/javascript">
-            $("#call-logs").click(function() {
-                $.get("/getLogs", function(data, status) {
-                    console.log(data)
-                    // document.write(data)
-                    $("#contactsTable").html(data)
-
-                });
-            });
-        </script> -->
-
-        
-    </body>
-
-</html>
+    <script type="text/javascript" src="{{ url_for('static', filename='data.js') }}"></script>
+</body>
