@@ -1,10 +1,10 @@
 // Get Contacts
-$("#contacts").click(function() {
+$("#contacts").click(function(e) {
+    e.preventDefault()
     $.get("/getContacts", function(data, status) {
         console.log(data)
         // document.write(data)
         $("#contactsTable").html(data)
-
     });
 });
 
