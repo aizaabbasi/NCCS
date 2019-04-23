@@ -12,3 +12,5 @@
 *.db-wal
 
 \.vscode/settings\.json
+
+templates/map\.html
