@@ -11,6 +11,7 @@ import readline
 from flask_table import Table, Col
 import numpy as np
 from gmplot import gmplot
+from datetime import datetime
 
 # Contacts table
 class ContactsTable(Table):
@@ -165,7 +166,7 @@ def readSMS():
     smsList = []
     for x in finalResult:
         # tempSms = {'Address':x.address, 'Content':x.content, 'Date':x.date,'Sent':x.date_sent}
-        tempSms = dict(number=x[0],content=x[1],dateReceived=x[2],dateSent=x[3])
+        tempSms = dict(number=x[0],content=x[1],dateReceived=datetime.fromtimestamp(x[2]/1e3),dateSent=datetime.fromtimestamp(x[3]/1e3))
         smsList.append(tempSms)
 
 
@@ -194,7 +195,7 @@ def getCallLogs():
     callLogsList = []
     for x in finalResult:
         # tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
-        tempLog = dict(name=x[0],number=x[1],date=x[2],duration=x[3])
+        tempLog = dict(name=x[0],number=x[1],date=datetime.fromtimestamp(x[2]/1e3),duration=x[3])
         callLogsList.append(tempLog)
 
     table = CallLogsTable(callLogsList)
