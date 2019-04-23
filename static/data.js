@@ -31,11 +31,9 @@ $("#call-logs").click(function() {
 // Map locations
 $("#locations").click(function() {
     $.get("/getLocations", function(data, status) {
-        console.log(data)
-        // document.write(map.html) 
-        var path = "<iframe src=\"{{ url_for('static', filename='map.html') }}\"></iframe> "
-        // $("#contactsTable").load(map.html)
+        var path = "<iframe src=/static/map.html style=\"width:100%; height:500px\"></iframe>"
+        path = path.replace(/[^\x20-\x7E]/g, '');
         console.log(path)
-
+        $("#contactsTable").html(path)
     });
 });
