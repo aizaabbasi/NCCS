@@ -40,6 +40,7 @@ password = 'asim'
 
 def executeCommand(passwd,command):
     '''Execute sudo command'''
+    command = command.replace('\n','')
     output = subprocess.check_output('echo {} | sudo -S {}'.format(passwd,command), shell=True)
     output = output.decode('utf-8')
     output = output.split('\n')
@@ -103,6 +104,8 @@ def readContacts():
     findCommand = "find /mnt/android -name contacts2.db"
     contactsPath = subprocess.check_output('echo {} | sudo -S {}'.format(password,findCommand), shell=True)
     contactsPath = contactsPath.decode('utf-8')
+    copyCommand = 'cp ' + contactsPath + ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
     # Because SQLAlchemy refused to work
     # cmd = 'sqlite3 ' +  contactsPath + '''select view_data.display_name, phone_lookup.normalized_number
     # from phone_lookup, view_data
