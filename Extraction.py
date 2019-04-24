@@ -233,6 +233,40 @@ def getFacebookUserName():
     
     return x
 
+@app.route('/getFacebookContacts', methods=['GET'])
+def getFacebookContacts():
+    findCmd = 'find /mnt/android -name contacts_db2'
+    locationsPath = executeCommand(password,findCmd)
+    print (locationsPath,"***********")
+
+   
+    copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
+
+    chownCommand = 'chown aizazsharif:aizazsharif contacts_db2'  +  ' \"' + os.getcwd() + '\"'
+    executeCommand(password, chownCommand)
+    
+    
+    # Connect to database
+    engine = create_engine('sqlite:///contacts_db2')   
+    connection = engine.connect()
+    metadata = db.MetaData()
+    
+    # Get table data
+    rows = db.Table('contacts', metadata, autoload=True, autoload_with=engine)
+    select_stmt = select([rows.c.first_name, rows.c.last_name,rows.c.display_name ])
+    # Execute query
+    result = connection.execute(select_stmt)
+    finalResult = result.fetchall()
+    friendslist = []
+    for x in finalResult:
+        if (x.first_name != 0) or (x.last_name != 0) or (x.display_name != 0):
+            tempLoc = {'First Name':(x.first_name),'Last Name':(x.last_name),'Display Name':(x.display_name)}
+            friendslist.append(tempLoc)
+
+    return jsonify({'friendslist':friendslist})     # Return JSON
+
+    #return locationsPath
 
 
 def main():

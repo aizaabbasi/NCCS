@@ -22,7 +22,8 @@ def initializeTree():
                  'help': showHelp,
                  'logs': showLogs,
                  'locations': showLocations,
-                 'facebookuser':getFacebookUserName
+                 'facebookuser':getFacebookUserName,
+                 'facebookContacts':getFacebookContacts
                  },
             'make':
                 {'image':makeImage
@@ -85,8 +86,22 @@ def getFacebookUserName():
     
     print (contacts)
     
-    
+def getFacebookContacts():
+    '''Get Facebook User Friends List'''
 
+    contactsList = []
+    # Get response from URL
+    contacts = getResponse('getFacebookContacts')
+    print (contacts)
+    # Get contacts
+    for x in contacts['friendslist']:
+        contactsList.append([str(x['Display Name']),str(x['First Name']),str(x['Last Name'])])
+        #contactsList.append(x)
+    print (contactsList)    
+    
+    headers = ['Display_Name','First Name', 'Last Name']
+    print(tabulate(contactsList, headers=headers, tablefmt='fancy_grid'))
+    
 def readContacts():
     '''Get list of contacts'''
     contactsList = []
