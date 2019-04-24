@@ -43,4 +43,6 @@ body {
 	border-color: #02d3f5; 
 }
 
-
+#admin-main-control {
+	border-left: 20px;
+}
