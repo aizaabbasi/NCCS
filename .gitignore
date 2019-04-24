@@ -14,3 +14,5 @@
 \.vscode/settings\.json
 
 templates/map\.html
+
+static/WhatsappMap\.html
