@@ -5,13 +5,15 @@ import sqlalchemy as db
 import sys
 from flask import Flask, jsonify, request, render_template, redirect, url_for
 import os
-from DataExtraction import get_image
+from DataExtraction import get_image2
 import json
 import readline
 from flask_table import Table, Col
 import numpy as np
 from gmplot import gmplot
 from datetime import datetime
+import time
+from flask_socketio import SocketIO, emit
 
 # Contacts table
 class ContactsTable(Table):
@@ -36,8 +38,14 @@ class CallLogsTable(Table):
     duration = Col('Duration (s)')
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 
-password = 'asim'
+password = ''
+device = None
+dataPath = None
+partitions = None
+userPartition = None
+partitionSize = 0
 
 def executeCommand(passwd,command):
     '''Execute sudo command'''
@@ -56,16 +64,56 @@ def getPassword():
     print(password)
     return render_template("sidebar.html")
     
-
+@app.route('/getImageSize', methods=['GET'])
+def getImageSize():
+    global device, dataPath, partitions, userPartition
+    device, dataPath, partitions, userPartition = get_image2.getPartitions()
+    global partitionSize
+    partitionSize = get_image2.getPartitionSize(partitions,userPartition)
+    return jsonify(partitionSize)    
+    
 
 @app.route('/makeImage', methods=['GET'])
 def makeImage():
     # Get password
     # response = request.json
     # password = response['password']
-    get_image.getImage()    # Make image
-    mountImage(password)    # Mount image
-    return jsonify({'OK': 'OK'})
+    get_image2.makeImage(device, dataPath, userPartition)    # Make image
+    # mountImage(password)
+    return jsonify({'OK': 'Done'})
+
+@socketio.on('getProgress')
+def getProgress():
+    '''Function to get file writing progress'''
+    # Get path of img file
+    path = os.getcwd()
+    filePath = path + '/android.img'
+    fileSize = os.path.getsize(filePath)        # Get size of img file
+    global partitionSize
+    partitionSize = int(partitionSize)
+    fileSize = int(fileSize)/1024               # Converting to KBs
+    # print("\n")
+    # Keep running till file writing is not complete
+    while fileSize < partitionSize:
+        fileSize = os.path.getsize(filePath)        # Get size of img file
+        fileSize = int(fileSize)/1024
+        perc = (fileSize/partitionSize) * 100   # Get percentage
+        perc = round(perc)
+        perc = str(perc)
+        # print("Progress: " + perc + "%", end='\r')
+        emit('progress', {'data': perc})
+        time.sleep(5)
+
+    # print("\nDone")
+
+@socketio.on('keepalive')
+def keepalive():
+    emit('alive', {'data':0})
+
+# @app.route('/mountImage', methods=['GET'])
+# def mountDeviceImage():
+#     mountImage(password)
+#     return jsonify({'OK': 'Done'})
 
 def mountImage(password):
     '''Function to mount image file'''
@@ -222,10 +270,19 @@ def getCallLocations():
     locationsList = []
     for x in finalResult:
         if (x.latitude != 0) or (x.longitude != 0):
-            tempLoc = {'Latitude':x.latitude,'Longitude':x.longitude}
+            # tempLoc = {'Latitude':x.latitude,'Longitude':x.longitude}
+            tempLoc = (x.latitude, x.longitude)
             locationsList.append(tempLoc)
 
-    return jsonify({'locations':locationsList})     # Return JSON
+    lats, longs = zip(*locationsList)
+
+    gmap = gmplot.GoogleMapPlotter(33.6007, 73.0679, 13)    # Initialize map
+   
+    gmap.heatmap(lats, longs)                # Make map
+    gmap.draw('static/WhatsappMap.html')     # Save map
+
+    return jsonify({'status':'OK'})
+    # return jsonify({'locations':locationsList})     # Return JSON
 
 @app.route('/getLocations', methods=['GET'])
 def getLocations():
@@ -253,12 +310,10 @@ def getLocations():
 
     lats,longs = zip(*locationsList)
     # Place map
-    gmap = gmplot.GoogleMapPlotter(33.6007, 73.0679, 13)
+    gmap = gmplot.GoogleMapPlotter(33.6007, 73.0679, 13)       # Initialize map
    
-
-    gmap.heatmap(lats, longs)
-    # gmap.scatter(top_attraction_lats, top_attraction_lons, '#3B0B39', size=40, marker=False)
-    gmap.draw('templates/map.html')
+    gmap.heatmap(lats, longs)           # Make map
+    gmap.draw('static/map.html')        # Save map
 
     return jsonify({'status':'OK'})
     # return jsonify({'locations':locationsList})     # Return JSON
@@ -268,7 +323,7 @@ def index():
     return render_template("login.html")
 
 def main():
-    app.run()
+    socketio.run(app)
     # mountImage()
 
 
