@@ -12,6 +12,8 @@ from pprint import pprint
 from datetime import datetime
 from getpass import getpass
 import readline
+import webbrowser
+import urllib.parse
 
 def initializeTree():
     tree = {'show': 
@@ -19,7 +21,8 @@ def initializeTree():
                  'sms': readSMS,
                  'help': showHelp,
                  'logs': showLogs,
-                 'locations': showLocations
+                 'locations': showLocations,
+                 'facebookuser':getFacebookUserName
                  },
             'make':
                 {'image':makeImage
@@ -67,6 +70,21 @@ def showHelp():
 
     headers = ['Command', 'Description']
     print(tabulate(helpList, headers=headers, tablefmt='rst'))
+
+def getFacebookUserName():
+    '''Get Facebook User Name'''
+    contactsList = []
+    # Get response from URL
+    contacts = getResponse('getFacebookUserName')
+    # Get contacts
+   
+    url = 'https://www.facebook.com/'+str(contacts)
+
+    print (url)
+    webbrowser.open(url)
+    
+    print (contacts)
+    
     
 
 def readContacts():

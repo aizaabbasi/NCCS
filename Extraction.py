@@ -80,9 +80,12 @@ def readContacts():
     # cmd = 'sqlite3 ' +  contactsPath + '''select view_data.display_name, phone_lookup.normalized_number
     # from phone_lookup, view_data
     # where phone_lookup.raw_contact_id = view_data.raw_contact_id;"'''
+
+    print ("****************")
+    
     cmd = '''sqlite3 contacts.db "select view_data.display_name, phone_lookup.normalized_number
-    from phone_lookup, view_data
-    where phone_lookup.raw_contact_id = view_data.raw_contact_id;"'''
+    #from phone_lookup, view_data
+    #where phone_lookup.raw_contact_id = view_data.raw_contact_id;"'''
     # Execute query
     output = subprocess.check_output('echo {} | sudo -S {}'.format(password, cmd), shell=True)
     # Get output of query
@@ -101,7 +104,9 @@ def readContacts():
     
     # Convert contacts list to JSON
     return jsonify({'contacts':contactsList})
+    
 
+    
 @app.route('/getSMS', methods=['GET'])
 def readSMS():
     '''Function to read SMS'''
@@ -206,8 +211,33 @@ def getLocations():
     return jsonify({'locations':locationsList})     # Return JSON
 
 
+@app.route('/getFacebookUserName', methods=['GET'])
+def getFacebookUserName():
+    findCmd = 'find /mnt/android -name app_gatekeepers'
+    locationsPath = executeCommand(password,findCmd)
+    copyCommand = 'cp -r ' + locationsPath +     ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
+    
+    y = os.getcwd()
+    print (y,"****************")
+    
+    copyCommand = 'chown aizazsharif:aizazsharif ' + os.getcwd() + '/app_gatekeepers/users/'  +  ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
+    
+    copyCommand = 'ls '+ os.getcwd()+'/app_gatekeepers/users/'
+    x=executeCommand(password, copyCommand)
+
+    print (x)
+
+    #x = z.split(os.sep)[-1]    
+    
+    return x
+
+
+
 def main():
     app.run()
+
     # mountImage()
 
 
