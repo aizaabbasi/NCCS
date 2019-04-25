@@ -2,6 +2,7 @@ import subprocess
 from pprint import pprint
 from sqlalchemy import create_engine, MetaData, Table, text, select
 import sqlalchemy as db
+import sqlalchemy
 import sys
 from flask import Flask, jsonify, request
 import os
@@ -263,12 +264,78 @@ def getFacebookContacts():
         if (x.first_name != 0) or (x.last_name != 0) or (x.display_name != 0):
             tempLoc = {'First Name':(x.first_name),'Last Name':(x.last_name),'Display Name':(x.display_name)}
             friendslist.append(tempLoc)
-
+    
     return jsonify({'friendslist':friendslist})     # Return JSON
 
     #return locationsPath
 
+@app.route('/getWhatsappContacts', methods=['GET'])
+def getWhatsappContacts():
 
+    findCmd = 'find /mnt/android -name msgstore.db'
+    locationsPath = executeCommand(password,findCmd)
+    print (locationsPath,"***********")
+
+   
+    copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
+
+    chownCommand = 'chown aizazsharif:aizazsharif msgstore.db'  +  ' \"' + os.getcwd() + '\"'
+    executeCommand(password, chownCommand)
+    
+    
+    # Connect to database
+    engine = create_engine('sqlite:///msgstore.db')   
+    connection = engine.connect()
+    metadata = db.MetaData()
+
+    # Get table data
+    rows = db.Table('messages', metadata, autoload=True, autoload_with=engine)
+    select_stmt = select([rows.c.key_remote_jid, rows.c.key_from_me ,rows.c.timestamp, rows.c.data, rows.c.media_mime_type, rows.c.media_size, rows.c.media_name, rows.c.media_caption ])
+    # Execute query
+    result = connection.execute(select_stmt)
+    finalResult = result.fetchall()
+    friendslist = []
+
+
+    for x in finalResult:
+        if (x.key_remote_jid != 0) or (x.key_from_me) or (x.timestamp!=0) or (x.data != 0) or (x.media_mime_type != 0)or (x.media_size != 0)or (x.media_name != 0)or (x.media_caption != 0):
+            tempLoc = {'Contact ID':(x.key_remote_jid),'Status':(x.key_from_me) , 'Timestamp':(x.timestamp), 'Text':(x.data),'Media Type':(x.media_mime_type),
+                'Media Size':(x.media_size),'Media Name':(x.media_name),'Media Caption':(x.media_caption)}
+            friendslist.append(tempLoc)
+    friendslist=friendslist[:100]
+    return jsonify({'contactlist':friendslist})     # Return JSON
+
+@app.route('/getWhatsappGroups', methods=['GET'])
+def getWhatsappGroups():
+    findCmd = 'find /mnt/android -name msgstore.db'
+    locationsPath = executeCommand(password,findCmd)
+    print (locationsPath,"***********")
+
+   
+    copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
+
+    chownCommand = 'chown aizazsharif:aizazsharif msgstore.db'  +  ' \"' + os.getcwd() + '\"'
+    executeCommand(password, chownCommand)
+    
+    # Get table data
+    db = sqlalchemy.create_engine('sqlite:///msgstore.db')
+    sql_cmd = sqlalchemy.text('''SELECT chat_list.key_remote_jid, chat_list.subject, chat_list.creation, messages_quotes.data
+    FROM chat_list
+    INNER JOIN messages_quotes ON chat_list.key_remote_jid = messages_quotes.key_remote_jid''')
+    finalResult = db.execute(sql_cmd).fetchall()  
+    friendslist = []
+    
+    for x in finalResult:
+        if (x.key_remote_jid != 0) or (x.subject) or (x.creation!=0) or (x.data != 0):
+            tempLoc = {'Contact ID':(x.key_remote_jid),'Group Name':(x.subject) , 'Timestamp':(x.creation), 'Text':(x.data)}
+            friendslist.append(tempLoc)
+    friendslist=friendslist[:50]
+    return jsonify({'contactlist':friendslist})     # Return JSON
+
+
+    #return locationsPath
 def main():
     app.run()
 
