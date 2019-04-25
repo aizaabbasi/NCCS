@@ -12,14 +12,23 @@ from pprint import pprint
 from datetime import datetime
 from getpass import getpass
 import readline
+import webbrowser
+import urllib.parse
 
 def initializeTree():
     tree = {'show': 
-                {'contacts': readContacts,
+                {'deviceInfo':getDeviceInfo,
+                 'syncedAccounts':getSyncedAccounts,
+                 'contacts': readContacts,
                  'sms': readSMS,
                  'help': showHelp,
                  'logs': showLogs,
-                 'locations': showLocations
+                 'locations': showLocations,
+                 'facebookuser':getFacebookUserName,
+                 'whatsappContacts':getWhatsappContacts,
+                 'facebookContacts':getFacebookContacts,
+                 'whatsappMessages ':getWhatsappMessages,
+                 'whatsappGroups':getWhatsappGroups
                  },
             'make':
                 {'image':makeImage
@@ -67,7 +76,113 @@ def showHelp():
 
     headers = ['Command', 'Description']
     print(tabulate(helpList, headers=headers, tablefmt='rst'))
+
+def getFacebookUserName():
+    '''Get Facebook User Name'''
+    contactsList = []
+    # Get response from URL
+    contacts = getResponse('getFacebookUserName')
+    # Get contacts
+   
+    url = 'https://www.facebook.com/'+str(contacts)
+
+    print (url)
+    webbrowser.open(url)
     
+    print (contacts)
+    
+def getFacebookContacts():
+    '''Get Facebook User Friends List'''
+
+    contactsList = []
+    # Get response from URL
+    contacts = getResponse('getFacebookContacts')
+    #print (contacts)
+    # Get contacts
+    for x in contacts['friendslist']:
+        contactsList.append([str(x['Display Name']),str(x['First Name']),str(x['Last Name'])])
+    #print (contactsList)    
+    
+    # Table part
+    headers = ['Display_Name','First Name', 'Last Name']
+    print(tabulate(contactsList, headers=headers, tablefmt='fancy_grid'))
+
+def getWhatsappContacts():
+    '''Get Whatsapp Contacts'''
+    contactsList = []
+    # Get response from URL
+    contacts = getResponse('getWhatsappContacts')
+    print (contacts)
+
+    for x in contacts['contactlist']:
+        contactsList.append([str(x['Display Name']),str(x['Number'])
+        ,str(x['Status'])])
+    
+    
+    # Table part
+    headers = ['Display Name', 'Number','Status']
+    print(tabulate(contactsList, headers=headers, tablefmt='fancy_grid'))
+
+
+
+def getWhatsappMessages():
+    '''Get Whatsapp Chat Details'''
+    contactsList = []
+    # Get response from URL
+    contacts = getResponse('getWhatsappMessages')
+    #print (contacts)
+
+    for x in contacts['contactlist']:
+        contactsList.append([str(x['Contact ID']),str(x['Media Caption'])
+        ,str(x['Media Name']),str(x['Media Size']),str(x['Media Type']),x['Status'],
+        str(x['Text']),datetime.fromtimestamp(x['Timestamp']/1e3)])
+    
+    
+    # Table part
+    headers = ['Contact ID','Media Caption','Media Name','Media Size','Media Type','Text','Timestamp']
+    print(tabulate(contactsList, headers=headers, tablefmt='fancy_grid'))
+
+def getWhatsappGroups():
+    '''Get Whatsapp Group Chat'''
+    contactsList = []
+    # Get response from URL
+    contacts = getResponse('getWhatsappGroups')
+    #print (contacts)
+
+    for x in contacts['contactlist']:
+        contactsList.append([str(x['Contact ID']),str(x['Group Name'])
+        ,str(x['Text'])
+        ,datetime.fromtimestamp(x['Timestamp']/1e3)])
+    
+   
+    for x in contactsList:
+        x[2]=x[2][:25]
+
+    # Table part
+    headers = ['Contact ID','Group Name','Text','Timestamp']
+    print(tabulate(contactsList, headers=headers, tablefmt='fancy_grid'))
+
+def getSyncedAccounts():
+    '''Get Sync'ed Accounts'''
+    accountsList = []
+    # Get response from URL
+    accounts = getResponse('getSyncedAccounts')
+    #print (accounts)
+    
+    print(tabulate(accounts, tablefmt='fancy_grid'))
+
+
+                
+def getDeviceInfo():
+    '''Print Device Information''' 
+    info = getResponse('getDeviceInfo')
+    #print (info)
+    
+    headers = ['Device Information']
+    print(tabulate(info, headers=headers, tablefmt='fancy_grid'))
+
+    
+
 
 def readContacts():
     '''Get list of contacts'''
