@@ -18,6 +18,7 @@ from datetime import datetime
 import time
 from flask_socketio import SocketIO, emit
 import yaml
+import re
 
 # Contacts table
 class ContactsTable(Table):
@@ -183,8 +184,8 @@ def readContacts():
     print ("****************")
     
     cmd = '''sqlite3 contacts.db "select view_data.display_name, phone_lookup.normalized_number
-    #from phone_lookup, view_data
-    #where phone_lookup.raw_contact_id = view_data.raw_contact_id;"'''
+    from phone_lookup, view_data
+    where phone_lookup.raw_contact_id = view_data.raw_contact_id;"'''
     # Execute query
     output = subprocess.check_output('echo {} | sudo -S {}'.format(password, cmd), shell=True)
     # Get output of query
@@ -442,6 +443,7 @@ def getWhatsappContacts():
     friendslist=friendslist[:50]
     return jsonify({'contactlist':friendslist})     # Return JSON    
     #return locationsPath
+
 @app.route('/getWhatsappMessages', methods=['GET'])
 def getWhatsappMessages():
 
