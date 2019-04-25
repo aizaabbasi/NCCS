@@ -6,19 +6,55 @@ from sqlalchemy import create_engine, MetaData, Table, text, select
 import sqlalchemy as db
 import sqlalchemy
 import sys
-import re
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template, redirect, url_for
 import os
-from DataExtraction import get_image
+from DataExtraction import get_image2
 import json
 import readline
+from flask_table import Table, Col
+import numpy as np
+from gmplot import gmplot
+from datetime import datetime
+import time
+from flask_socketio import SocketIO, emit
+import yaml
+
+# Contacts table
+class ContactsTable(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    name = Col('Name')
+    number = Col('Number')
+
+# SMS table
+class SMSTable(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    number = Col('Number')
+    content = Col('Content')
+    dateReceived = Col('Date Received')
+    dateSent = Col('Date Sent')
+
+# SMS table
+class CallLogsTable(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    name = Col('Name')
+    number = Col('Number')
+    date = Col('Date')
+    duration = Col('Duration (s)')
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 
-password = ''
+password = None
+device = None
+dataPath = None
+partitions = None
+userPartition = None
+partitionSize = 0
+
 
 def executeCommand(passwd,command):
     '''Execute sudo command'''
+    command = command.replace('\n','')
     output = subprocess.check_output('echo {} | sudo -S {}'.format(passwd,command), shell=True)
     output = output.decode('utf-8')
     output = output.split('\n')
@@ -28,19 +64,75 @@ def executeCommand(passwd,command):
 
 @app.route('/getPassword', methods=['POST'])
 def getPassword():
-    response = request.json
+    '''Get root password from user'''
     global password
-    password = response['password']
-    return "OK", 200
+    password = request.form['password']
+    data = {'password':password}
+    # write password file
+    with open('password.yaml', 'w') as outfile:
+        yaml.dump(data, outfile, default_flow_style=False)
+    return render_template("sidebar.html")
+
+def readPasswordFile():
+    '''Read password from file'''
+    global password
+    with open("password.yaml", 'r') as stream:
+        try:
+            data = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    password = data['password']
+    return password
+    
+@app.route('/getImageSize', methods=['GET'])
+def getImageSize():
+    '''Get size of partitions'''
+    global device, dataPath, partitions, userPartition
+    device, dataPath, partitions, userPartition = get_image2.getPartitions()
+    global partitionSize
+    partitionSize = get_image2.getPartitionSize(partitions,userPartition)
+    return jsonify(partitionSize)    
+    
 
 @app.route('/makeImage', methods=['GET'])
 def makeImage():
+    '''Make android device image'''
     # Get password
     # response = request.json
     # password = response['password']
-    get_image.getImage()    # Make image
-    mountImage(password)    # Mount image
-    return jsonify({'OK': 'OK'})
+    get_image2.makeImage(device, dataPath, userPartition)    # Make image
+    return jsonify({'OK': 'Done'})
+
+@socketio.on('getProgress')
+def getProgress():
+    '''Function to get file writing progress'''
+    # Get path of img file
+    path = os.getcwd()
+    filePath = path + '/android.img'
+    fileSize = os.path.getsize(filePath)        # Get size of img file
+    global partitionSize
+    partitionSize = int(partitionSize)
+    fileSize = int(fileSize)/1024               # Converting to KBs
+    # print("\n")
+    # Keep running till file writing is not complete
+    # while fileSize < partitionSize:
+    fileSize = os.path.getsize(filePath)        # Get size of img file
+    fileSize = int(fileSize)/1024
+    perc = (fileSize/partitionSize) * 100   # Get percentage
+    # perc = round(perc)
+    # perc = str(perc)
+    perc = ("%.1f" % perc)
+    # print("Progress: " + perc + "%", end='\r')
+    emit('progress', {'data': perc})
+
+    # print("\nDone")
+
+@app.route('/mountImage', methods=['GET'])
+def mountDeviceImage():
+    '''Mount image'''
+    mountImage(password)
+    return jsonify({'OK': 'Done'})
 
 def mountImage(password):
     '''Function to mount image file'''
@@ -63,7 +155,7 @@ def mountImage(password):
     else:       # Create directory
         # Unmount image
         try:
-            subprocess.call('echo {} | sudo -S {}'.format(password, unmountCmd), shell=True)
+            subprocess.call('echo {} getPassword| sudo -S {}'.format(password, unmountCmd), shell=True)
         except:
             pass
         # Mount image
@@ -79,7 +171,10 @@ def readContacts():
     '''Function to read contacts'''
     findCommand = "find /mnt/android -name contacts2.db"
     contactsPath = subprocess.check_output('echo {} | sudo -S {}'.format(password,findCommand), shell=True)
-    contactsPath = contactsPath.decode('utf-8')
+    contactsPath = (contactsPath.decode('utf-8')).split('\n')
+    contactsPath = contactsPath[0]
+    copyCommand = 'cp ' + contactsPath + ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
     # Because SQLAlchemy refused to work
     # cmd = 'sqlite3 ' +  contactsPath + '''select view_data.display_name, phone_lookup.normalized_number
     # from phone_lookup, view_data
@@ -95,20 +190,30 @@ def readContacts():
     # Get output of query
     output = output.decode('utf-8')
     output = output.split('\n')
+    filterList = []
 
     # Get contacts and append to list
     contactsList = []
     for x in output:
         x = x.split("|")
         try:
-            tempContact = {x[0]:x[1]}
-            contactsList.append(tempContact)
+            filterStr = x[0] + "~" + x[1]
+            # tempContact = {x[0]:x[1]}
+            if not (filterStr in filterList):
+                tempContact = dict(name=x[0],number=x[1])
+                contactsList.append(tempContact)
+
+            filterList.append(filterStr)
         except:
             pass
-    
+
+    filterList = []
     # Convert contacts list to JSON
-    return jsonify({'contacts':contactsList})
-    
+
+    # return jsonify({'contacts':contactsList})
+    table = ContactsTable(contactsList)
+    # return render_template('contacts.html',contactsList=table)
+    return jsonify(table)
 
     
 @app.route('/getSMS', methods=['GET'])
@@ -133,12 +238,15 @@ def readSMS():
     finalResult = result.fetchall()
     smsList = []
     for x in finalResult:
-        tempSms = {'Address':x.address, 'Content':x.content, 'Date':x.date,'Sent':x.date_sent}
+        # tempSms = {'Address':x.address, 'Content':x.content, 'Date':x.date,'Sent':x.date_sent}
+        tempSms = dict(number=x[0],content=x[1],dateReceived=datetime.fromtimestamp(x[2]/1e3),dateSent=datetime.fromtimestamp(x[3]/1e3))
         smsList.append(tempSms)
 
 
-    smsList = smsList[:3]     # Limit to x number of SMS
-    return jsonify({'sms':smsList})     # Return JSON
+    smsList = smsList[:50]     # Limit to x number of SMS
+    table = SMSTable(smsList)
+    return jsonify(table)       # Return table
+    # return jsonify({'sms':smsList})     # Return JSON
 
 @app.route('/getLogs', methods=['GET'])
 def getCallLogs():
@@ -159,10 +267,13 @@ def getCallLogs():
     finalResult = result.fetchall()
     callLogsList = []
     for x in finalResult:
-        tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
+        # tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
+        tempLog = dict(name=x[0],number=x[1],date=datetime.fromtimestamp(x[2]/1e3),duration=x[3])
         callLogsList.append(tempLog)
 
-    return jsonify({'calllogs':callLogsList})     # Return JSON
+    table = CallLogsTable(callLogsList)
+    return jsonify(table)
+    # return jsonify({'calllogs':callLogsList})     # Return JSON
 
 @app.route('/getWhatsappLocations', methods=['GET'])
 def getCallLocations():
@@ -184,14 +295,23 @@ def getCallLocations():
     locationsList = []
     for x in finalResult:
         if (x.latitude != 0) or (x.longitude != 0):
-            tempLoc = {'Latitude':x.latitude,'Longitude':x.longitude}
+            # tempLoc = {'Latitude':x.latitude,'Longitude':x.longitude}
+            tempLoc = (x.latitude, x.longitude)
             locationsList.append(tempLoc)
 
-    return jsonify({'locations':locationsList})     # Return JSON
+    lats, longs = zip(*locationsList)
+
+    gmap = gmplot.GoogleMapPlotter(33.6007, 73.0679, 13)    # Initialize map
+   
+    gmap.heatmap(lats, longs)                # Make map
+    gmap.draw('static/WhatsappMap.html')     # Save map
+
+    return jsonify({'status':'OK'})
+    # return jsonify({'locations':locationsList})     # Return JSON
 
 @app.route('/getLocations', methods=['GET'])
 def getLocations():
-    '''Get whatsapp locations'''
+    '''Get locations'''
     findCmd = 'find /mnt/android -name gmm_sync.db'
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
@@ -209,10 +329,32 @@ def getLocations():
     locationsList = []
     for x in finalResult:
         if (x.latitude_e6 != 0) or (x.longitude_e6 != 0):
-            tempLoc = {'Latitude':(x.latitude_e6/1e6),'Longitude':(x.longitude_e6/1e6)}
+            # tempLoc = {'Latitude':(x.latitude_e6/1e6),'Longitude':(x.longitude_e6/1e6)}
+            tempLoc = (x.latitude_e6/1e6, x.longitude_e6/1e6)
             locationsList.append(tempLoc)
 
-    return jsonify({'locations':locationsList})     # Return JSON
+    lats,longs = zip(*locationsList)
+    # Place map
+    gmap = gmplot.GoogleMapPlotter(33.6007, 73.0679, 13)       # Initialize map
+   
+    gmap.heatmap(lats, longs)           # Make map
+    gmap.draw('static/map.html')        # Save map
+
+    return jsonify({'status':'OK'})
+    # return jsonify({'locations':locationsList})     # Return JSON
+
+@app.route("/")
+def index():
+    global password
+    try:
+        password = readPasswordFile()
+        print(password)
+        if password == None:
+            return render_template("login.html")
+        else:
+            return render_template('sidebar.html')
+    except:
+        return render_template('login.html')
 
 
 @app.route('/getFacebookUserName', methods=['GET'])
@@ -459,8 +601,8 @@ def getDeviceInfo():
 
     
 def main():
-    app.run()
 
+    socketio.run(app)
     # mountImage()
 
 
