@@ -353,10 +353,83 @@ def getSyncedAccounts():
         ACCOUNTS.append(acc)
     return (jsonify({'accounts':ACCOUNTS}))
 
+@app.route('/getDeviceInfo', methods=['GET'])
+def getDeviceInfo():   
+    device=[]
+
+    
+    # Check permissions
+    QPERM = co(['adb', 'shell', 'id']).decode('UTF-8')
+    if 'root' in QPERM:
+        PERM = 'root'
+    else:
+        QPERMSU = co(['adb', 'shell', 'su', '-c', 'id']).decode('UTF-8')
+        if 'root' in QPERMSU:
+            PERM = 'root(su)'
+        else:
+            PERM = 'shell(non-rooted)'
+    print(" Shell permissions: " + PERM)
+    device.append(" Shell permissions: " + PERM)
+     
+    # Make & Model
+    BUILDPROP = co(['adb', 'shell', 'cat', '/system/build.prop']).decode('UTF-8')
+    for manuf in BUILDPROP.split('\n'):
+        if 'ro.product.manufacturer' in manuf:
+            DEVICE_MANUF = manuf.strip().split('=')[1]
+    for model in BUILDPROP.split('\n'):
+        if 'ro.product.model' in model:
+            DEVICE_MODEL = model.strip().split('=')[1]
+    try:
+        print(" Device model: %s %s" % (DEVICE_MANUF, DEVICE_MODEL))
+    except:
+        pass
+
+    device.append(" Device model: %s %s" % (DEVICE_MANUF, DEVICE_MODEL))    
+    
+    # Build ID
+    for buildid in BUILDPROP.split('\n'):
+        if 'ro.build.display.id' in buildid:
+            BUILD_ID = buildid.strip().split('=')[1]
+    try:
+        print(" Build number: " + BUILD_ID)
+    except:
+        pass
+
+    device.append(" Build number: " + BUILD_ID)
+
+
+    # Wifi
+    DUMPSYS_W = co(['adb', 'shell', 'dumpsys', 'wifi']).decode('UTF-8')
+    try:
+        wifi_beg = DUMPSYS_W.index('MAC:')+5
+        wifi_end = DUMPSYS_W[wifi_beg:].index(',')
+        if wifi_end == 17:
+            WIFI_MAC = DUMPSYS_W[wifi_beg:wifi_beg+wifi_end].lower()
+            try:
+                print(" Wi-fi MAC: " + WIFI_MAC)
+            except:
+                pass
+    except:
+        pass
+
+    device.append(" Wi-fi MAC: " + WIFI_MAC)
     
 
+    # IMEI
+    IMEI = co(['adb', 'shell', 'service', 'call','iphonesubinfo','16',
+    '|','busybox','awk','-F','\"\'\"','\'{print $2}\'','|','busybox','sed'
+        ,'\'s/[^0-9A-F]*//g\'','|','busybox','tr','-d','\'\n\'','&&','echo']).decode('UTF-8')
+    IMEI=IMEI.strip("\r\n")
+    try:
+        print(" IMEI: " + IMEI)
+    except:
+        pass 
+    device.append(" IMEI: " + IMEI)
+    return (jsonify({'device':device}))
 
 
+
+    
 def main():
     app.run()
 
