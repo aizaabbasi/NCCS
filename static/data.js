@@ -3,7 +3,7 @@ $("#makeImage").click(function(e) {
     e.preventDefault()
     var partitionSize = 0
     progressbar = `<div class="progress">
-    <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" style="width:0%">0%</div>
+    <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" style="width:0%; color: black;">0%</div>
     </div><br>`
     $("#contactsTable").html(progressbar)
     $.get("/getImageSize", function(data, status) {
@@ -20,26 +20,26 @@ $("#makeImage").click(function(e) {
             socket.on('connect', function() {
                 console.log('Websocket connected!');
                 socket.emit('getProgress')
-                socket.emit('keepalive')
             });
 
+            var progress = 0.0
             socket.on('progress', function(msg) {
-                console.log(msg.data)
+                progress = msg.data
+                progress = parseFloat(progress)
+                console.log(progress)
                 progressbar = `<div class="progress">
-                <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" style="width:` + msg.data + `%">` + msg.data + `%</div>
+                <div class="progress-bar bg-info progress-bar-striped progress-bar-animated" style="width:` + msg.data + `%; color: black;">` + msg.data + `%</div>
                 </div><br>`
                 $("#contactsTable").html(progressbar)
-                // $('#log').append('<p>Received: ' + msg.data + '</p>');
-            });
-
-            
-            // $.get("/getProgress", function(data, status) {
-            //     console.log(data)
-            //     // document.write(data)
-            //     $("#contactsTable").html(data)
-            // });
-
-            
+                if (progress >= 100)
+                {
+                    socket.disconnect();    // Disconnect socket
+                }
+                else
+                {
+                    socket.emit('getProgress')
+                }
+            });     
             
 
         });
@@ -49,6 +49,16 @@ $("#makeImage").click(function(e) {
     //     // document.write(data)
     //     $("#contactsTable").html(data)
     // });
+});
+
+// Mount image
+$("#mountImage").click(function(e) {
+    e.preventDefault()
+    // Mount image
+    $.get("/mountImage", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html('<h2>Done</h2>')
+    });
 });
 
 // Get Contacts
