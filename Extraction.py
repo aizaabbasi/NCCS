@@ -274,6 +274,34 @@ def getFacebookContacts():
 
 @app.route('/getWhatsappContacts', methods=['GET'])
 def getWhatsappContacts():
+    findCmd = 'find /mnt/android -name wa.db'
+    locationsPath = executeCommand(password,findCmd)
+    print (locationsPath,"***********")
+
+   
+    copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
+
+    chownCommand = 'chown aizazsharif:aizazsharif wa.db'  +  ' \"' + os.getcwd() + '\"'
+    executeCommand(password, chownCommand)
+    
+    # Get table data
+    db = sqlalchemy.create_engine('sqlite:///wa.db')
+    
+    sql_cmd = sqlalchemy.text('''select display_name,number,status from wa_contacts where is_whatsapp_user='1';''')
+    finalResult = db.execute(sql_cmd).fetchall()  
+    print (finalResult)
+    friendslist = []
+    
+    for x in finalResult:
+        if (x.display_name != 0) or (x.number) or (x.status!=0):
+           tempLoc = {'Display Name':(x.display_name),'Number':(x.number) , 'Status':(x.status)}
+           friendslist.append(tempLoc)
+    friendslist=friendslist[:50]
+    return jsonify({'contactlist':friendslist})     # Return JSON    
+    #return locationsPath
+@app.route('/getWhatsappMessages', methods=['GET'])
+def getWhatsappMessages():
 
     findCmd = 'find /mnt/android -name msgstore.db'
     locationsPath = executeCommand(password,findCmd)
