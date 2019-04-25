@@ -17,7 +17,7 @@ import urllib.parse
 
 def initializeTree():
     tree = {'show': 
-                {#'IMEI':getIMEI,
+                {'syncedAccounts':getSyncedAccounts,
                  'contacts': readContacts,
                  'sms': readSMS,
                  'help': showHelp,
@@ -142,7 +142,15 @@ def getWhatsappGroups():
     headers = ['Contact ID','Group Name','Text','Timestamp']
     print(tabulate(contactsList, headers=headers, tablefmt='fancy_grid'))
 
-
+def getSyncedAccounts():
+    '''Get Sync'ed Accounts'''
+    accountsList = []
+    # Get response from URL
+    accounts = getResponse('getSyncedAccounts')
+    print (accounts)
+    
+    print(tabulate(accounts, tablefmt='fancy_grid'))
+    
 def readContacts():
     '''Get list of contacts'''
     contactsList = []

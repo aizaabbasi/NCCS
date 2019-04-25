@@ -1,9 +1,12 @@
 import subprocess
+from subprocess import check_output as co
+from subprocess import call
 from pprint import pprint
 from sqlalchemy import create_engine, MetaData, Table, text, select
 import sqlalchemy as db
 import sqlalchemy
 import sys
+import re
 from flask import Flask, jsonify, request
 import os
 from DataExtraction import get_image
@@ -334,8 +337,26 @@ def getWhatsappGroups():
     friendslist=friendslist[:50]
     return jsonify({'contactlist':friendslist})     # Return JSON
 
+@app.route('/getSyncedAccounts', methods=['GET'])
+def getSyncedAccounts():
+    ALLACC = co(['adb', 'shell', 'dumpsys', 'account']).decode('UTF-8')
+    all_acc = re.compile('Account {name=', re.DOTALL).finditer(ALLACC)
+    ACCOUNTS = []
+    
+    
+    for acc in all_acc:
+        hit_pos = acc.start()
+        tacc = ALLACC[hit_pos+14:]
+        end_pos = tacc.index('}')
+        acc0 = tacc[:end_pos].replace(' type=', '').split(',')
+        acc = acc0[1]+": "+acc0[0]
+        ACCOUNTS.append(acc)
+    return (jsonify({'accounts':ACCOUNTS}))
 
-    #return locationsPath
+    
+
+
+
 def main():
     app.run()
 
