@@ -75,10 +75,11 @@ def readPasswordFile():
     global password
     with open("password.yaml", 'r') as stream:
         try:
-            password = yaml.safe_load(stream)
+            data = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
 
+    password = data['password']
     return password
     
 @app.route('/getImageSize', methods=['GET'])
