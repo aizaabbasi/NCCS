@@ -14,6 +14,7 @@ from gmplot import gmplot
 from datetime import datetime
 import time
 from flask_socketio import SocketIO, emit
+import yaml
 
 # Contacts table
 class ContactsTable(Table):
@@ -40,12 +41,13 @@ class CallLogsTable(Table):
 app = Flask(__name__)
 socketio = SocketIO(app)
 
-password = ''
+password = None
 device = None
 dataPath = None
 partitions = None
 userPartition = None
 partitionSize = 0
+
 
 def executeCommand(passwd,command):
     '''Execute sudo command'''
@@ -59,10 +61,25 @@ def executeCommand(passwd,command):
 
 @app.route('/getPassword', methods=['POST'])
 def getPassword():
+    '''Get root password from user'''
     global password
     password = request.form['password']
-    print(password)
+    data = {'password':password}
+    # write password file
+    with open('password.yaml', 'w') as outfile:
+        yaml.dump(data, outfile, default_flow_style=False)
     return render_template("sidebar.html")
+
+def readPasswordFile():
+    '''Read password from file'''
+    global password
+    with open("password.yaml", 'r') as stream:
+        try:
+            password = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    return password
     
 @app.route('/getImageSize', methods=['GET'])
 def getImageSize():
@@ -320,7 +337,17 @@ def getLocations():
 
 @app.route("/")
 def index():
-    return render_template("login.html")
+    global password
+    try:
+        password = readPasswordFile()
+        print(password)
+        if password == None:
+            return render_template("login.html")
+        else:
+            return render_template('sidebar.html')
+    except:
+        return render_template('login.html')
+
 
 def main():
     socketio.run(app)
