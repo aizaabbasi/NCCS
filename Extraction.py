@@ -84,6 +84,7 @@ def readPasswordFile():
     
 @app.route('/getImageSize', methods=['GET'])
 def getImageSize():
+    '''Get size of partitions'''
     global device, dataPath, partitions, userPartition
     device, dataPath, partitions, userPartition = get_image2.getPartitions()
     global partitionSize
@@ -93,11 +94,11 @@ def getImageSize():
 
 @app.route('/makeImage', methods=['GET'])
 def makeImage():
+    '''Make android device image'''
     # Get password
     # response = request.json
     # password = response['password']
     get_image2.makeImage(device, dataPath, userPartition)    # Make image
-    # mountImage(password)
     return jsonify({'OK': 'Done'})
 
 @socketio.on('getProgress')
@@ -112,26 +113,23 @@ def getProgress():
     fileSize = int(fileSize)/1024               # Converting to KBs
     # print("\n")
     # Keep running till file writing is not complete
-    while fileSize < partitionSize:
-        fileSize = os.path.getsize(filePath)        # Get size of img file
-        fileSize = int(fileSize)/1024
-        perc = (fileSize/partitionSize) * 100   # Get percentage
-        perc = round(perc)
-        perc = str(perc)
-        # print("Progress: " + perc + "%", end='\r')
-        emit('progress', {'data': perc})
-        time.sleep(5)
+    # while fileSize < partitionSize:
+    fileSize = os.path.getsize(filePath)        # Get size of img file
+    fileSize = int(fileSize)/1024
+    perc = (fileSize/partitionSize) * 100   # Get percentage
+    # perc = round(perc)
+    # perc = str(perc)
+    perc = ("%.1f" % perc)
+    # print("Progress: " + perc + "%", end='\r')
+    emit('progress', {'data': perc})
 
     # print("\nDone")
 
-@socketio.on('keepalive')
-def keepalive():
-    emit('alive', {'data':0})
-
-# @app.route('/mountImage', methods=['GET'])
-# def mountDeviceImage():
-#     mountImage(password)
-#     return jsonify({'OK': 'Done'})
+@app.route('/mountImage', methods=['GET'])
+def mountDeviceImage():
+    '''Mount image'''
+    mountImage(password)
+    return jsonify({'OK': 'Done'})
 
 def mountImage(password):
     '''Function to mount image file'''
@@ -170,7 +168,8 @@ def readContacts():
     '''Function to read contacts'''
     findCommand = "find /mnt/android -name contacts2.db"
     contactsPath = subprocess.check_output('echo {} | sudo -S {}'.format(password,findCommand), shell=True)
-    contactsPath = contactsPath.decode('utf-8')
+    contactsPath = (contactsPath.decode('utf-8')).split('\n')
+    contactsPath = contactsPath[0]
     copyCommand = 'cp ' + contactsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
     # Because SQLAlchemy refused to work
