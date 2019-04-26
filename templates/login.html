@@ -16,33 +16,27 @@
         <body>
            <!-- Header-->
            {% include 'header.html' %}
-           
-            <section style="margin-top:40px">
-                <div class="row justify-content-center">
-                    <div class="col-md-8">
-                        
-                        <form action="{{ url_for('getPassword') }}" method="post">
-                            <!-- Input fieds-->
-                            <div class="form-group row">
-                                <label for="password" class="col-md-4 col-form-label text-md-right">Password</label>
-                                <div class="col-md-5">
-                                    <input type="password" id="password" class="form-control" name="password" required autofocus>
-                                </div>
-                            </div>
-                            
-                            <!-- Button-->
-                            <div class="col-md-5 offset-md-6">
-                                <button type="text" class="btn btn-primary" id="login-button" name="login-button">
-                                    Login
-                                </button>
-                            </div>
 
-                        </form>
-
+        <div id="login">
+            <h3 class="text-center text-white pt-5">Login form</h3>
+                <div class="container">
+                    <div id="login-row" class="row justify-content-center align-items-center">
+                        <div id="login-column" class="col-md-6">
+                            <div id="login-box" class="col-md-12">
+                                <form id="login-form" class="form" action="{{ url_for('getPassword') }}" method="post">
+                                    <div class="form-group">
+                                        <label for="Password" class="text-info">Password:</label><br>
+                                        <input type="password" name="password" id="password" class="form-control">
+                                    </div>          
+                                    <div class="form-group">
+                                        <input type="submit" name="submit" class="btn btn-info btn-md" value="submit">
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </section>
-
+        </div>
 
         </body>
     </head>
