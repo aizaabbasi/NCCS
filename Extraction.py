@@ -19,6 +19,7 @@ import time
 from flask_socketio import SocketIO, emit
 import yaml
 import re
+import getpass
 
 # Contacts table
 class ContactsTable(Table):
@@ -165,6 +166,14 @@ def mountImage(password):
         except:
             pass
 
+def takeOwnership(filename):
+    '''Take ownership of file'''
+    user = getpass.getuser()
+    group = subprocess.check_output('id -gn', shell=True)
+    group = group.decode('utf-8')
+    group = group.replace('\n','')
+    cmd = 'chown ' + user + ":" + group + " " + filename
+    executeCommand(password, cmd)
 
 # Add route to get contacts
 @app.route('/getContacts', methods=['GET'])
@@ -176,6 +185,8 @@ def readContacts():
     contactsPath = contactsPath[0]
     copyCommand = 'cp ' + contactsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
+    # Take ownership
+    takeOwnership('contacts2.db')
     # Because SQLAlchemy refused to work
     # cmd = 'sqlite3 ' +  contactsPath + '''select view_data.display_name, phone_lookup.normalized_number
     # from phone_lookup, view_data
@@ -183,13 +194,15 @@ def readContacts():
 
     print ("****************")
     
-    cmd = '''sqlite3 contacts.db "select view_data.display_name, phone_lookup.normalized_number
-    from phone_lookup, view_data
-    where phone_lookup.raw_contact_id = view_data.raw_contact_id;"'''
+    cmd = "select view_data.display_name, phone_lookup.normalized_number from phone_lookup, view_data where phone_lookup.raw_contact_id = view_data.raw_contact_id order by view_data.display_name; \n"
     # Execute query
-    output = subprocess.check_output('echo {} | sudo -S {}'.format(password, cmd), shell=True)
+    # output = subprocess.check_output('echo {} | sudo -S {}'.format(password, cmd), shell=True)
+    process = subprocess.Popen("sqlite3 contacts2.db", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    process.stdin.write(cmd.encode('utf-8'))
+    process.stdin.write(cmd.encode('utf-8'))
+    stdout = process.communicate()[0]
+    output = stdout.decode('utf-8')
     # Get output of query
-    output = output.decode('utf-8')
     output = output.split('\n')
     filterList = []
 
@@ -227,6 +240,8 @@ def readSMS():
     copyCommand = 'cp ' + smsPath + ' \"' + os.getcwd() + '\"'
     # subprocess.call('echo {} | sudo -S {}'.format(password,copyCommand), shell=True)
     executeCommand(password, copyCommand)
+    # Take ownership
+    takeOwnership('mmssms.db')
     # Connect to database
     engine = create_engine('sqlite:///mmssms.db')   
     connection = engine.connect()
@@ -256,6 +271,8 @@ def getCallLogs():
     logsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + logsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
+    # Take ownership
+    takeOwnership('calllog.db')
     # Connect to database
     engine = create_engine('sqlite:///calllog.db')   
     connection = engine.connect()
@@ -283,6 +300,8 @@ def getCallLocations():
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
+    # Take ownership
+    takeOwnership('msgstore.db')
     # Connect to database
     engine = create_engine('sqlite:///msgstore.db')   
     connection = engine.connect()
@@ -317,6 +336,8 @@ def getLocations():
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
+    # Take ownership
+    takeOwnership('gmm_sync.db')
     # Connect to database
     engine = create_engine('sqlite:///gmm_sync.db')   
     connection = engine.connect()
@@ -603,9 +624,7 @@ def getDeviceInfo():
 
     
 def main():
-
     socketio.run(app)
-    # mountImage()
 
 
 if __name__ == "__main__":
