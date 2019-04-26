@@ -219,13 +219,14 @@ def showLogs():
     callLogsList = []
     # Get response from url
     response = getResponse('getLogs')
+    '''
     callLogs = response['calllogs']
     for x in callLogs:
         callLogsList.append([x['Name'],x['Number'],datetime.fromtimestamp(x['Date']/1e3),str(x['Duration']) + 's'])
 
     headers = ['Name', 'Number', 'Date', 'Duration']
     print(tabulate(callLogsList, headers=headers, tablefmt='fancy_grid'))
-
+    '''
 def showLocations():
     '''Get list of whatsapp locations'''
     locationsList = []

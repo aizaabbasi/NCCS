@@ -41,6 +41,44 @@ class CallLogsTable(Table):
     date = Col('Date')
     duration = Col('Duration (s)')
 
+# Facebook Contacts table
+class FacebookContactsTable(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    first_name = Col('First Name')
+    last_name = Col('Last Name')
+    display_name = Col('Display Name')
+
+# Whatsapp Contacts table
+class WhatsappContactsTable(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    display_name = Col('Display Name')
+    number = Col('Number')
+    status = Col('Status')
+
+# Whatsapp Messages table
+class WhatsappMessagesTable(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    contact_id = Col('Display Name')
+    status = Col('Status')
+    timestamp = Col('Timestamp')
+    text = Col('Text')
+    media_type = Col('Media Type')
+    media_size = Col('Media Size')
+    media_name = Col('Media NameuNames')
+    media_caption = Col('Media Caption')
+
+
+# Whatsapp Groups table
+class WhatsappMessagesGroups(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    contact_id = Col('Display Name')
+    group_name = Col('Group Name')
+    timestamp = Col('Timestamp')
+    text = Col('Text')
+
+
+
+
 app = Flask(__name__)
 socketio = SocketIO(app)
 
@@ -65,7 +103,7 @@ def executeCommand(passwd,command):
 @app.route('/getPassword', methods=['POST'])
 def getPassword():
     '''Get root password from user'''
-    
+    '''
     response = request.json
     global password
     password = response['password']
@@ -78,7 +116,7 @@ def getPassword():
     with open('password.yaml', 'w') as outfile:
         yaml.dump(data, outfile, default_flow_style=False)
     return render_template("sidebar.html")
-    '''
+    
 def readPasswordFile():
     '''Read password from file'''
     global password
@@ -197,6 +235,7 @@ def readContacts():
     
     stdout = process.communicate()[0]
     output = stdout.decode('utf-8')
+    output=output.split('\n')
     #print (output)
     
     filterList = []
@@ -218,7 +257,7 @@ def readContacts():
 
     filterList = []
     # Convert contacts list to JSON
-
+    print (contactsList)
     # return jsonify({'contacts':contactsList})
     table = ContactsTable(contactsList)
     print (table)
@@ -273,13 +312,20 @@ def getCallLogs():
     logsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + logsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
+
+    copyCommand = 'chown aizazsharif:aizazsharif calllog.db'  +  ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
+
+
     # Connect to database
     engine = create_engine('sqlite:///calllog.db')   
     connection = engine.connect()
+
     metadata = db.MetaData()
     # Get table data
     messages = db.Table('calls', metadata, autoload=True, autoload_with=engine)
     select_stmt = select([messages.c.name, messages.c.number, messages.c.date, messages.c.duration])
+    '''
     # Execute query
     result = connection.execute(select_stmt)
     finalResult = result.fetchall()
@@ -292,7 +338,8 @@ def getCallLogs():
     table = CallLogsTable(callLogsList)
     return jsonify(table)
     # return jsonify({'calllogs':callLogsList})     # Return JSON
-
+    '''
+    return "yes"
 @app.route('/getWhatsappLocations', methods=['GET'])
 def getCallLocations():
     '''Get whatsapp locations'''
@@ -430,6 +477,7 @@ def getFacebookContacts():
     # Execute query
     result = connection.execute(select_stmt)
     finalResult = result.fetchall()
+    '''
     friendslist = []
     for x in finalResult:
         if (x.first_name != 0) or (x.last_name != 0) or (x.display_name != 0):
@@ -437,8 +485,15 @@ def getFacebookContacts():
             friendslist.append(tempLoc)
     
     return jsonify({'friendslist':friendslist})     # Return JSON
+    '''
+    callLogsList = []
+    for x in finalResult:
+        # tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
+        tempLog = dict(first_name=x[0],last_name=x[1],display_name=x[2])
+        callLogsList.append(tempLog)
 
-    #return locationsPath
+    table = FacebookContactsTable(callLogsList)
+    return jsonify(table)
 
 @app.route('/getWhatsappContacts', methods=['GET'])
 def getWhatsappContacts():
@@ -462,12 +517,22 @@ def getWhatsappContacts():
     friendslist = []
     
     for x in finalResult:
+        # tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
+        tempLog = dict(display_name=x[0],number=x[1],status=x[2])
+        friendslist.append(tempLog)
+
+    table = WhatsappContactsTable(friendslist)
+    return jsonify(table)
+
+    ''' 
+    for x in finalResult:
         if (x.display_name != 0) or (x.number) or (x.status!=0):
            tempLoc = {'Display Name':(x.display_name),'Number':(x.number) , 'Status':(x.status)}
            friendslist.append(tempLoc)
     friendslist=friendslist[:50]
     return jsonify({'contactlist':friendslist})     # Return JSON    
     #return locationsPath
+    '''
 @app.route('/getWhatsappMessages', methods=['GET'])
 def getWhatsappMessages():
 
@@ -494,9 +559,19 @@ def getWhatsappMessages():
     # Execute query
     result = connection.execute(select_stmt)
     finalResult = result.fetchall()
-    friendslist = []
+    Result = []
+
+    for x in Result:
+        # tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
+        tempLog = dict(contact_id=x[0],status=x[1],timestamp=x[2],text=x[3],media_type=x[4],
+        media_size=x[5],media_name=x[6],media_caption=x[7])
+        Result.append(tempLog)
+
+    table = WhatsappMessagesTable(Result)
+    return jsonify(table)
 
 
+    '''
     for x in finalResult:
         if (x.key_remote_jid != 0) or (x.key_from_me) or (x.timestamp!=0) or (x.data != 0) or (x.media_mime_type != 0)or (x.media_size != 0)or (x.media_name != 0)or (x.media_caption != 0):
             tempLoc = {'Contact ID':(x.key_remote_jid),'Status':(x.key_from_me) , 'Timestamp':(x.timestamp), 'Text':(x.data),'Media Type':(x.media_mime_type),
@@ -504,7 +579,7 @@ def getWhatsappMessages():
             friendslist.append(tempLoc)
     friendslist=friendslist[:100]
     return jsonify({'contactlist':friendslist})     # Return JSON
-
+    '''
 @app.route('/getWhatsappGroups', methods=['GET'])
 def getWhatsappGroups():
     findCmd = 'find /mnt/android -name msgstore.db'
@@ -524,14 +599,26 @@ def getWhatsappGroups():
     FROM chat_list
     INNER JOIN messages_quotes ON chat_list.key_remote_jid = messages_quotes.key_remote_jid''')
     finalResult = db.execute(sql_cmd).fetchall()  
-    friendslist = []
+    Result = []
+
+    for x in Result:
+        # tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
+        tempLog = dict(contact_id=x[0],group_name=x[1],timestamp=x[2],text=x[3])
+        Result.append(tempLog)
+
+    table = WhatsappMessagesGroups(Result)
+    return jsonify(table)
+
     
+    '''    
     for x in finalResult:
         if (x.key_remote_jid != 0) or (x.subject) or (x.creation!=0) or (x.data != 0):
             tempLoc = {'Contact ID':(x.key_remote_jid),'Group Name':(x.subject) , 'Timestamp':(x.creation), 'Text':(x.data)}
             friendslist.append(tempLoc)
     friendslist=friendslist[:50]
     return jsonify({'contactlist':friendslist})     # Return JSON
+    '''
+
 
 @app.route('/getSyncedAccounts', methods=['GET'])
 def getSyncedAccounts():
