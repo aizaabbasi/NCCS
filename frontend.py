@@ -190,6 +190,7 @@ def readContacts():
     # Get response from URL
     contacts = getResponse('getContacts')
     # Get contacts
+    
     contacts = contacts['contacts']
     for contact in contacts:
         for name, number in contact.items():

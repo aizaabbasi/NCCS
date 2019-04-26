@@ -65,6 +65,12 @@ def executeCommand(passwd,command):
 @app.route('/getPassword', methods=['POST'])
 def getPassword():
     '''Get root password from user'''
+    
+    response = request.json
+    global password
+    password = response['password']
+    return "OK", 200
+    '''
     global password
     password = request.form['password']
     data = {'password':password}
@@ -72,7 +78,7 @@ def getPassword():
     with open('password.yaml', 'w') as outfile:
         yaml.dump(data, outfile, default_flow_style=False)
     return render_template("sidebar.html")
-
+    '''
 def readPasswordFile():
     '''Read password from file'''
     global password
@@ -175,21 +181,24 @@ def readContacts():
     contactsPath = contactsPath[0]
     copyCommand = 'cp ' + contactsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
-    # Because SQLAlchemy refused to work
-    # cmd = 'sqlite3 ' +  contactsPath + '''select view_data.display_name, phone_lookup.normalized_number
-    # from phone_lookup, view_data
-    # where phone_lookup.raw_contact_id = view_data.raw_contact_id;"'''
 
-    print ("****************")
     
-    cmd = '''sqlite3 contacts.db "select view_data.display_name, phone_lookup.normalized_number
-    #from phone_lookup, view_data
-    #where phone_lookup.raw_contact_id = view_data.raw_contact_id;"'''
+    copyCommand = 'chown aizazsharif:aizazsharif contacts2.db'  +  ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
+
+    cmd = "select distinct view_data.display_name, phone_lookup.normalized_number from phone_lookup, view_data where phone_lookup.raw_contact_id = view_data.raw_contact_id order by view_data.display_name; \n"
     # Execute query
-    output = subprocess.check_output('echo {} | sudo -S {}'.format(password, cmd), shell=True)
-    # Get output of query
-    output = output.decode('utf-8')
-    output = output.split('\n')
+    # output = subprocess.check_output('echo {} | sudo -S {}'.format(password, cmd), shell=True)
+    
+    process = subprocess.Popen("sqlite3 contacts2.db", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    
+    process.stdin.write(cmd.encode('utf-8'))
+    process.stdin.write(cmd.encode('utf-8'))
+    
+    stdout = process.communicate()[0]
+    output = stdout.decode('utf-8')
+    #print (output)
+    
     filterList = []
 
     # Get contacts and append to list
@@ -212,13 +221,13 @@ def readContacts():
 
     # return jsonify({'contacts':contactsList})
     table = ContactsTable(contactsList)
+    print (table)
     # return render_template('contacts.html',contactsList=table)
     return jsonify(table)
-
-    
+        
 @app.route('/getSMS', methods=['GET'])
 def readSMS():
-    '''Function to read SMS'''
+    '''Function to read SMS (For Android 5.0'''
     findCommand = "find /mnt/android -name mmssms.db"
     # smsPath = subprocess.check_output('echo {} | sudo -S {}'.format(password,findCommand), shell=True)
     smsPath = executeCommand(password, findCommand)
@@ -226,19 +235,28 @@ def readSMS():
     copyCommand = 'cp ' + smsPath + ' \"' + os.getcwd() + '\"'
     # subprocess.call('echo {} | sudo -S {}'.format(password,copyCommand), shell=True)
     executeCommand(password, copyCommand)
+
+    copyCommand = 'chown aizazsharif:aizazsharif mmssms.db'  +  ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
+
+
+    
     # Connect to database
     engine = create_engine('sqlite:///mmssms.db')   
     connection = engine.connect()
     metadata = db.MetaData()
+    
     # Get table data
-    messages = db.Table('messages', metadata, autoload=True, autoload_with=engine)
-    select_stmt = select([messages.c.address, messages.c.content, messages.c.date, messages.c.date_sent])
+    messages = db.Table('sms', metadata, autoload=True, autoload_with=engine)
+    select_stmt = select([messages.c.address, messages.c.body, messages.c.date, messages.c.date_sent])
     # Execute query
     result = connection.execute(select_stmt)
     finalResult = result.fetchall()
+    
+    #print (finalResult)
     smsList = []
     for x in finalResult:
-        # tempSms = {'Address':x.address, 'Content':x.content, 'Date':x.date,'Sent':x.date_sent}
+        # tempSms = {'Address':x.address, 'Content':x.body, 'Date':x.date,'Sent':x.date_sent}
         tempSms = dict(number=x[0],content=x[1],dateReceived=datetime.fromtimestamp(x[2]/1e3),dateSent=datetime.fromtimestamp(x[3]/1e3))
         smsList.append(tempSms)
 
@@ -247,7 +265,7 @@ def readSMS():
     table = SMSTable(smsList)
     return jsonify(table)       # Return table
     # return jsonify({'sms':smsList})     # Return JSON
-
+    
 @app.route('/getLogs', methods=['GET'])
 def getCallLogs():
     '''Get call logs'''
@@ -281,6 +299,8 @@ def getCallLocations():
     findCmd = 'find /mnt/android -name msgstore.db'
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
+    copyCommand = 'chown aizazsharif:aizazsharif msgstore.db'  +  ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
     # Connect to database
     engine = create_engine('sqlite:///msgstore.db')   
@@ -316,6 +336,11 @@ def getLocations():
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
+    
+    copyCommand = 'chown aizazsharif:aizazsharif gmm_sync.db'  +  ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
+
+
     # Connect to database
     engine = create_engine('sqlite:///gmm_sync.db')   
     connection = engine.connect()
@@ -326,6 +351,7 @@ def getLocations():
     # Execute query
     result = connection.execute(select_stmt)
     finalResult = result.fetchall()
+    print (finalResult)
     locationsList = []
     for x in finalResult:
         if (x.latitude_e6 != 0) or (x.longitude_e6 != 0):
