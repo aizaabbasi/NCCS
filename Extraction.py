@@ -248,7 +248,9 @@ def readSMS():
     metadata = db.MetaData()
     # Get table data
     messages = db.Table('messages', metadata, autoload=True, autoload_with=engine)
-    select_stmt = select([messages.c.address, messages.c.content, messages.c.date, messages.c.date_sent])
+    select_stmt = select([messages.c.address, messages.c.content, messages.c.date, messages.c.date_sent],
+    group_by=[messages.c.address],
+    order_by=[messages.c.address])
     # Execute query
     result = connection.execute(select_stmt)
     finalResult = result.fetchall()
@@ -259,7 +261,7 @@ def readSMS():
         smsList.append(tempSms)
 
 
-    smsList = smsList[:50]     # Limit to x number of SMS
+    # smsList = smsList[:50]     # Limit to x number of SMS
     table = SMSTable(smsList)
     return jsonify(table)       # Return table
     # return jsonify({'sms':smsList})     # Return JSON
