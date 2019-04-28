@@ -58,20 +58,25 @@ class WhatsappContactsTable(Table):
 # Whatsapp Messages table
 class WhatsappMessagesTable(Table):
     classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
-    contact_id = Col('Display Name')
+    number = Col('Contact ID')
+    
+
     status = Col('Status')
     timestamp = Col('Timestamp')
     text = Col('Text')
+    
+    
+    
     media_type = Col('Media Type')
     media_size = Col('Media Size')
-    media_name = Col('Media NameuNames')
+    media_name = Col('Media Name')
     media_caption = Col('Media Caption')
-
+    
 
 # Whatsapp Groups table
-class WhatsappMessagesGroups(Table):
+class WhatsappGroupsTable(Table):
     classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
-    contact_id = Col('Display Name')
+    display_name = Col('Display Name')
     group_name = Col('Group Name')
     timestamp = Col('Timestamp')
     text = Col('Text')
@@ -449,8 +454,9 @@ def getFacebookUserName():
     print (x)
 
     #x = z.split(os.sep)[-1]    
-    
-    return x
+    url = 'https://www.facebook.com/'+str(x)
+    print (url)
+    return url
 
 @app.route('/getFacebookContacts', methods=['GET'])
 def getFacebookContacts():
@@ -535,9 +541,9 @@ def getWhatsappContacts():
     '''
 @app.route('/getWhatsappMessages', methods=['GET'])
 def getWhatsappMessages():
-
+ 
     findCmd = 'find /mnt/android -name msgstore.db'
-    locationsPath = executeCommand(password,findCmd)
+    locationsPath = executeCommand("aizaz",findCmd)
     print (locationsPath,"***********")
 
    
@@ -552,34 +558,38 @@ def getWhatsappMessages():
     engine = create_engine('sqlite:///msgstore.db')   
     connection = engine.connect()
     metadata = db.MetaData()
-
+    
     # Get table data
     rows = db.Table('messages', metadata, autoload=True, autoload_with=engine)
-    select_stmt = select([rows.c.key_remote_jid, rows.c.key_from_me ,rows.c.timestamp, rows.c.data, rows.c.media_mime_type, rows.c.media_size, rows.c.media_name, rows.c.media_caption ])
+    select_stmt = select([rows.c.key_remote_jid , rows.c.key_from_me ,rows.c.timestamp, rows.c.data , rows.c.media_mime_type, rows.c.media_size, rows.c.media_name, rows.c.media_caption ])
     # Execute query
     result = connection.execute(select_stmt)
     finalResult = result.fetchall()
+    finalResult=finalResult[2:50]
     Result = []
-
-    for x in Result:
-        # tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
-        tempLog = dict(contact_id=x[0],status=x[1],timestamp=x[2],text=x[3],media_type=x[4],
+    friendslist=[]
+    print (finalResult)
+    
+    for x in finalResult:
+        tempLog = dict(number=x[0] ,status=x[1],timestamp=x[2],text=x[3]
+        ,media_type=x[4],
         media_size=x[5],media_name=x[6],media_caption=x[7])
         Result.append(tempLog)
 
     table = WhatsappMessagesTable(Result)
+    print (table)
     return jsonify(table)
 
 
     '''
     for x in finalResult:
-        if (x.key_remote_jid != 0) or (x.key_from_me) or (x.timestamp!=0) or (x.data != 0) or (x.media_mime_type != 0)or (x.media_size != 0)or (x.media_name != 0)or (x.media_caption != 0):
-            tempLoc = {'Contact ID':(x.key_remote_jid),'Status':(x.key_from_me) , 'Timestamp':(x.timestamp), 'Text':(x.data),'Media Type':(x.media_mime_type),
-                'Media Size':(x.media_size),'Media Name':(x.media_name),'Media Caption':(x.media_caption)}
+        if (x.key_remote_jid != 0):
+            tempLoc = {'Contact ID':(x.key_remote_jid)}
             friendslist.append(tempLoc)
-    friendslist=friendslist[:100]
+    
     return jsonify({'contactlist':friendslist})     # Return JSON
     '''
+     
 @app.route('/getWhatsappGroups', methods=['GET'])
 def getWhatsappGroups():
     findCmd = 'find /mnt/android -name msgstore.db'
@@ -599,14 +609,15 @@ def getWhatsappGroups():
     FROM chat_list
     INNER JOIN messages_quotes ON chat_list.key_remote_jid = messages_quotes.key_remote_jid''')
     finalResult = db.execute(sql_cmd).fetchall()  
+    finalResult=finalResult[:50]
     Result = []
 
-    for x in Result:
+    for x in finalResult:
         # tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
-        tempLog = dict(contact_id=x[0],group_name=x[1],timestamp=x[2],text=x[3])
+        tempLog = dict(display_name=x[0],group_name=x[1],timestamp=x[2],text=x[3])
         Result.append(tempLog)
 
-    table = WhatsappMessagesGroups(Result)
+    table = WhatsappGroupsTable(Result)
     return jsonify(table)
 
     

@@ -110,4 +110,53 @@ $("#whatsappLocations").click(function() {
         $("#contactsTable").html(path)
     });
 });
+// Facebook Profile
+$("#facebookprofile").click(function() {
+    $.get("/getFacebookUserName", function(data, status) {
+        console.log(data);
+        window.open(data, '_blank');
 
+
+        
+        
+    });
+});
+// Facebook Contacts
+$("#facebookcontacts").click(function() {
+    $.get("/getFacebookContacts", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+      
+        
+    });
+});
+
+// Whatsapp Contacts
+$("#whatsappcontacts").click(function() {
+    $.get("/getWhatsappContacts", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+      
+        
+    });
+});
+
+// Whatsapp Chat
+$("#whatsappmessages").click(function() {
+    $.get("/getWhatsappMessages", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+      
+        
+    });
+});
+
+// Whatsapp Groups 
+$("#whatsappgroups").click(function() {
+    $.get("/getWhatsappGroups", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+      
+        
+    });
+});
