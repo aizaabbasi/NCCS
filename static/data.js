@@ -160,3 +160,34 @@ $("#whatsappgroups").click(function() {
         
     });
 });
+// Synced Accounts 
+$("#syncaccounts").click(function() {
+    $.get("/getSyncedAccounts", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+            
+    //     var tbl=$("<table/>").attr("id","mytable");
+    //     $("#div1").append(tbl);
+    //     for(var i=0;i<data.length;i++)
+    //     {
+    //         var tr="<tr>";
+    //         var td1="<td>"+data[i]+"</td>";
+
+
+    //     $("#contactsTable").append(tr+td1); 
+
+    // }   
+      
+        
+    });
+});
+
+// Device Info 
+$("#deviceinfo").click(function() {
+    $.get("/getDeviceInfo", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+      
+        
+    });
+});

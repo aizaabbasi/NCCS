@@ -18,7 +18,7 @@ from datetime import datetime
 import time
 from flask_socketio import SocketIO, emit
 import yaml
-
+import re
 # Contacts table
 class ContactsTable(Table):
     classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
@@ -82,6 +82,18 @@ class WhatsappGroupsTable(Table):
     text = Col('Text')
 
 
+# Synced Accounts table
+class SyncAccountsTable(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    accountsName = Col('Accounts Name')
+
+
+# Synced Accounts table
+class DeviceInfoTable(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    deviceInfo = Col('Device Information')
+    
+
 
 
 app = Flask(__name__)
@@ -104,6 +116,23 @@ def executeCommand(passwd,command):
     output = output[0]
     output = output.replace('\n','')
     return output 
+
+def cleanFirefox():
+    '''
+    command = 'rm ~/.mozilla/firefox/*.default/cookies.sqlite' 
+    print (command)
+    executeCommand("aizaz", command)
+
+    command = 'rm ~/.mozilla/firefox/*.default/*.sqlite ~/.mozilla/firefox/*default/sessionstore.js' 
+    print (command)
+    executeCommand("aizaz", command)
+
+    
+    '''
+    command = 'rm -r ~/.cache/mozilla/firefox/*.default/*' 
+    print (command)
+    executeCommand("aizaz", command)
+
 
 @app.route('/getPassword', methods=['POST'])
 def getPassword():
@@ -543,7 +572,7 @@ def getWhatsappContacts():
 def getWhatsappMessages():
  
     findCmd = 'find /mnt/android -name msgstore.db'
-    locationsPath = executeCommand("aizaz",findCmd)
+    locationsPath = executeCommand(password,findCmd)
     print (locationsPath,"***********")
 
    
@@ -644,9 +673,21 @@ def getSyncedAccounts():
         end_pos = tacc.index('}')
         acc0 = tacc[:end_pos].replace(' type=', '').split(',')
         acc = acc0[1]+": "+acc0[0]
-        ACCOUNTS.append(acc)
-    return (jsonify({'accounts':ACCOUNTS}))
+        ACCOUNTS.append(acc) 
+    friendslist=[]
+    for x in ACCOUNTS:
+        # tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
+        tempLog = dict(accountsName=x)
+        friendslist.append(tempLog)
 
+    table = SyncAccountsTable(friendslist)
+    return jsonify(table)
+
+    
+    '''
+    print (len(ACCOUNTS))    
+    return (jsonify(ACCOUNTS))
+    '''
 @app.route('/getDeviceInfo', methods=['GET'])
 def getDeviceInfo():   
     device=[]
@@ -719,13 +760,24 @@ def getDeviceInfo():
     except:
         pass 
     device.append(" IMEI: " + IMEI)
-    return (jsonify({'device':device}))
+    
+    friendslist=[]
+    for x in device:
+        # tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
+        tempLog = dict(deviceInfo=x)
+        print (x)
+        friendslist.append(tempLog)
+
+    table = DeviceInfoTable(friendslist)
+    return jsonify(table)
+
+    #return (jsonify({'device':device}))
 
 
 
     
 def main():
-
+    cleanFirefox()
     socketio.run(app)
     # mountImage()
 
