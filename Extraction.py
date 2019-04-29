@@ -19,6 +19,8 @@ import time
 from flask_socketio import SocketIO, emit
 import yaml
 import re
+import getpass
+
 # Contacts table
 class ContactsTable(Table):
     classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
@@ -242,6 +244,14 @@ def mountImage(password):
         except:
             pass
 
+def takeOwnership(filename):
+    '''Take ownership of file'''
+    user = getpass.getuser()
+    group = subprocess.check_output('id -gn', shell=True)
+    group = group.decode('utf-8')
+    group = group.replace('\n','')
+    cmd = 'chown ' + user + ":" + group + " " + filename
+    executeCommand(password, cmd)
 
 # Add route to get contacts
 @app.route('/getContacts', methods=['GET'])
@@ -253,25 +263,26 @@ def readContacts():
     contactsPath = contactsPath[0]
     copyCommand = 'cp ' + contactsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
+    # Take ownership
+    takeOwnership('contacts2.db')
+    # Because SQLAlchemy refused to work
+    # cmd = 'sqlite3 ' +  contactsPath + '''select view_data.display_name, phone_lookup.normalized_number
+    # from phone_lookup, view_data
+    # where phone_lookup.raw_contact_id = view_data.raw_contact_id;"'''
 
-    
-    copyCommand = 'chown aizazsharif:aizazsharif contacts2.db'  +  ' \"' + os.getcwd() + '\"'
-    executeCommand(password, copyCommand)
 
     cmd = "select distinct view_data.display_name, phone_lookup.normalized_number from phone_lookup, view_data where phone_lookup.raw_contact_id = view_data.raw_contact_id order by view_data.display_name; \n"
+
     # Execute query
     # output = subprocess.check_output('echo {} | sudo -S {}'.format(password, cmd), shell=True)
-    
     process = subprocess.Popen("sqlite3 contacts2.db", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    
     process.stdin.write(cmd.encode('utf-8'))
     process.stdin.write(cmd.encode('utf-8'))
-    
     stdout = process.communicate()[0]
     output = stdout.decode('utf-8')
-    output=output.split('\n')
-    #print (output)
-    
+    # Get output of query
+    output = output.split('\n')
+
     filterList = []
 
     # Get contacts and append to list
@@ -309,19 +320,19 @@ def readSMS():
     # subprocess.call('echo {} | sudo -S {}'.format(password,copyCommand), shell=True)
     executeCommand(password, copyCommand)
 
-    copyCommand = 'chown aizazsharif:aizazsharif mmssms.db'  +  ' \"' + os.getcwd() + '\"'
-    executeCommand(password, copyCommand)
+    # Take ownership
+    takeOwnership('mmssms.db')
 
-
-    
     # Connect to database
     engine = create_engine('sqlite:///mmssms.db')   
     connection = engine.connect()
     metadata = db.MetaData()
     
     # Get table data
-    messages = db.Table('sms', metadata, autoload=True, autoload_with=engine)
-    select_stmt = select([messages.c.address, messages.c.body, messages.c.date, messages.c.date_sent])
+    messages = db.Table('messages', metadata, autoload=True, autoload_with=engine)
+    select_stmt = select([messages.c.address, messages.c.content, messages.c.date, messages.c.date_sent],
+    group_by=[messages.c.address],
+    order_by=[messages.c.address])
     # Execute query
     result = connection.execute(select_stmt)
     finalResult = result.fetchall()
@@ -334,7 +345,7 @@ def readSMS():
         smsList.append(tempSms)
 
 
-    smsList = smsList[:50]     # Limit to x number of SMS
+    # smsList = smsList[:50]     # Limit to x number of SMS
     table = SMSTable(smsList)
     return jsonify(table)       # Return table
     # return jsonify({'sms':smsList})     # Return JSON
@@ -347,10 +358,8 @@ def getCallLogs():
     copyCommand = 'cp ' + logsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
 
-    copyCommand = 'chown aizazsharif:aizazsharif calllog.db'  +  ' \"' + os.getcwd() + '\"'
-    executeCommand(password, copyCommand)
-
-
+    # Take ownership
+    takeOwnership('calllog.db')
     # Connect to database
     engine = create_engine('sqlite:///calllog.db')   
     connection = engine.connect()
@@ -381,8 +390,9 @@ def getCallLocations():
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
-    copyCommand = 'chown aizazsharif:aizazsharif msgstore.db'  +  ' \"' + os.getcwd() + '\"'
-    executeCommand(password, copyCommand)
+
+    # Take ownership
+    takeOwnership('msgstore.db')
     # Connect to database
     engine = create_engine('sqlite:///msgstore.db')   
     connection = engine.connect()
@@ -417,11 +427,8 @@ def getLocations():
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
-    
-    copyCommand = 'chown aizazsharif:aizazsharif gmm_sync.db'  +  ' \"' + os.getcwd() + '\"'
-    executeCommand(password, copyCommand)
 
-
+    takeOwnership('gmm_sync.db')
     # Connect to database
     engine = create_engine('sqlite:///gmm_sync.db')   
     connection = engine.connect()
@@ -568,6 +575,7 @@ def getWhatsappContacts():
     return jsonify({'contactlist':friendslist})     # Return JSON    
     #return locationsPath
     '''
+
 @app.route('/getWhatsappMessages', methods=['GET'])
 def getWhatsappMessages():
  
@@ -779,7 +787,6 @@ def getDeviceInfo():
 def main():
     cleanFirefox()
     socketio.run(app)
-    # mountImage()
 
 
 if __name__ == "__main__":
