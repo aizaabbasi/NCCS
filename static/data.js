@@ -110,4 +110,84 @@ $("#whatsappLocations").click(function() {
         $("#contactsTable").html(path)
     });
 });
+// Facebook Profile
+$("#facebookprofile").click(function() {
+    $.get("/getFacebookUserName", function(data, status) {
+        console.log(data);
+        window.open(data, '_blank');
 
+
+        
+        
+    });
+});
+// Facebook Contacts
+$("#facebookcontacts").click(function() {
+    $.get("/getFacebookContacts", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+      
+        
+    });
+});
+
+// Whatsapp Contacts
+$("#whatsappcontacts").click(function() {
+    $.get("/getWhatsappContacts", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+      
+        
+    });
+});
+
+// Whatsapp Chat
+$("#whatsappmessages").click(function() {
+    $.get("/getWhatsappMessages", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+      
+        
+    });
+});
+
+// Whatsapp Groups 
+$("#whatsappgroups").click(function() {
+    $.get("/getWhatsappGroups", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+      
+        
+    });
+});
+// Synced Accounts 
+$("#syncaccounts").click(function() {
+    $.get("/getSyncedAccounts", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+            
+    //     var tbl=$("<table/>").attr("id","mytable");
+    //     $("#div1").append(tbl);
+    //     for(var i=0;i<data.length;i++)
+    //     {
+    //         var tr="<tr>";
+    //         var td1="<td>"+data[i]+"</td>";
+
+
+    //     $("#contactsTable").append(tr+td1); 
+
+    // }   
+      
+        
+    });
+});
+
+// Device Info 
+$("#deviceinfo").click(function() {
+    $.get("/getDeviceInfo", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+      
+        
+    });
+});
