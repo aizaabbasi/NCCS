@@ -133,7 +133,7 @@ def cleanFirefox():
     '''
     command = 'rm -r ~/.cache/mozilla/firefox/*.default/*' 
     print (command)
-    executeCommand("aizaz", command)
+    executeCommand('asim', command)
 
 
 @app.route('/getPassword', methods=['POST'])
@@ -368,7 +368,7 @@ def getCallLogs():
     # Get table data
     messages = db.Table('calls', metadata, autoload=True, autoload_with=engine)
     select_stmt = select([messages.c.name, messages.c.number, messages.c.date, messages.c.duration])
-    '''
+    
     # Execute query
     result = connection.execute(select_stmt)
     finalResult = result.fetchall()
@@ -381,8 +381,8 @@ def getCallLogs():
     table = CallLogsTable(callLogsList)
     return jsonify(table)
     # return jsonify({'calllogs':callLogsList})     # Return JSON
-    '''
-    return "yes"
+    
+
 @app.route('/getWhatsappLocations', methods=['GET'])
 def getCallLocations():
     '''Get whatsapp locations'''
@@ -481,10 +481,11 @@ def getFacebookUserName():
     y = os.getcwd()
     print (y,"****************")
     
-    copyCommand = 'chown aizazsharif:aizazsharif ' + os.getcwd() + '/app_gatekeepers/users/'  +  ' \"' + os.getcwd() + '\"'
-    executeCommand(password, copyCommand)
+    # copyCommand = 'chown aizazsharif:aizazsharif ' + os.getcwd() + '/app_gatekeepers/users/'  +  ' \"' + os.getcwd() + '\"'
+    # executeCommand(password, copyCommand)
+    takeOwnership('/app_gatekeepers/users/')
     
-    copyCommand = 'ls '+ os.getcwd()+'/app_gatekeepers/users/'
+    copyCommand = 'ls ' + os.getcwd() + '/app_gatekeepers/users/'
     x=executeCommand(password, copyCommand)
 
     print (x)
@@ -504,8 +505,9 @@ def getFacebookContacts():
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
 
-    chownCommand = 'chown aizazsharif:aizazsharif contacts_db2'  +  ' \"' + os.getcwd() + '\"'
-    executeCommand(password, chownCommand)
+    # chownCommand = 'chown aizazsharif:aizazsharif contacts_db2'  +  ' \"' + os.getcwd() + '\"'
+    # executeCommand(password, chownCommand)
+    takeOwnership('contacts_db2')
     
     
     # Connect to database
@@ -547,9 +549,11 @@ def getWhatsappContacts():
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
 
-    chownCommand = 'chown aizazsharif:aizazsharif wa.db'  +  ' \"' + os.getcwd() + '\"'
-    executeCommand(password, chownCommand)
+    # chownCommand = 'chown aizazsharif:aizazsharif wa.db'  +  ' \"' + os.getcwd() + '\"'
+    # executeCommand(password, chownCommand)
     
+    takeOwnership('wa.db')
+
     # Get table data
     db = sqlalchemy.create_engine('sqlite:///wa.db')
     
@@ -587,9 +591,10 @@ def getWhatsappMessages():
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
 
-    chownCommand = 'chown aizazsharif:aizazsharif msgstore.db'  +  ' \"' + os.getcwd() + '\"'
-    executeCommand(password, chownCommand)
+    # chownCommand = 'chown aizazsharif:aizazsharif msgstore.db'  +  ' \"' + os.getcwd() + '\"'
+    # executeCommand(password, chownCommand)
     
+    takeOwnership('msgstore.db')
     
     # Connect to database
     engine = create_engine('sqlite:///msgstore.db')   
@@ -637,9 +642,11 @@ def getWhatsappGroups():
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
 
-    chownCommand = 'chown aizazsharif:aizazsharif msgstore.db'  +  ' \"' + os.getcwd() + '\"'
-    executeCommand(password, chownCommand)
+    # chownCommand = 'chown aizazsharif:aizazsharif msgstore.db'  +  ' \"' + os.getcwd() + '\"'
+    # executeCommand(password, chownCommand)
     
+    takeOwnership('msgstore.db')
+
     # Get table data
     db = sqlalchemy.create_engine('sqlite:///msgstore.db')
     sql_cmd = sqlalchemy.text('''SELECT chat_list.key_remote_jid, chat_list.subject, chat_list.creation, messages_quotes.data
@@ -759,9 +766,11 @@ def getDeviceInfo():
     
 
     # IMEI
-    IMEI = co(['adb', 'shell', 'service', 'call','iphonesubinfo','16',
-    '|','busybox','awk','-F','\"\'\"','\'{print $2}\'','|','busybox','sed'
-        ,'\'s/[^0-9A-F]*//g\'','|','busybox','tr','-d','\'\n\'','&&','echo']).decode('UTF-8')
+    cmd = "adb shell service call iphonesubinfo 1 | awk -F \"'\" '{print $2}' | sed '1 d' | tr -d '.' | awk '{print}' ORS="
+    IMEI = (co(cmd, shell=True)).decode('utf-8')
+    # IMEI = co(['adb', 'shell', 'service', 'call','iphonesubinfo','16',
+    # '|','busybox','awk','-F','\"\'\"','\'{print $2}\'','|','busybox','sed'
+    #     ,'\'s/[^0-9A-F]*//g\'','|','busybox','tr','-d','\'\n\'','&&','echo']).decode('UTF-8')
     IMEI=IMEI.strip("\r\n")
     try:
         print(" IMEI: " + IMEI)
@@ -785,7 +794,10 @@ def getDeviceInfo():
 
     
 def main():
-    cleanFirefox()
+    try:
+        cleanFirefox()
+    except Exception as e:
+        print(e)
     socketio.run(app)
 
 
