@@ -1,3 +1,7 @@
 # This repository hosts the code for NCCS
-## How to Run
+# Description
 - Merged (Aizaz)
+- Merged (Aiza)
+
+# How to Run
+- sudo python3 Extraction.py
