@@ -20,6 +20,8 @@ from flask_socketio import SocketIO, emit
 import yaml
 import re
 import getpass
+import allAudSearch as ad
+import urllib
 
 # Contacts table
 class ContactsTable(Table):
@@ -94,8 +96,11 @@ class SyncAccountsTable(Table):
 class DeviceInfoTable(Table):
     classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
     deviceInfo = Col('Device Information')
-    
 
+# Audio Files Table
+class AudioFiles(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    audioFiles = Col('Files')
 
 
 app = Flask(__name__)
@@ -703,6 +708,7 @@ def getSyncedAccounts():
     print (len(ACCOUNTS))    
     return (jsonify(ACCOUNTS))
     '''
+
 @app.route('/getDeviceInfo', methods=['GET'])
 def getDeviceInfo():   
     device=[]
@@ -789,6 +795,22 @@ def getDeviceInfo():
     return jsonify(table)
 
     #return (jsonify({'device':device}))
+
+@app.route('/getAudioFiles', methods=['GET'])
+def audioSearch():
+    '''Return list of audio files'''
+    audioList = []  # This will have all the files
+    audioFileList = ad.getFiles('/mnt/android/')    # Call the function to get files
+    
+    # Iterate over the list of files to convert them to table format
+    # for x in audioFileList:
+    #     tempFile = dict(audioFiles=x)    # Add to dictionary
+    #     audioList.append(tempFile)          # Add dictionary to list
+
+    # table = AudioFiles(audioList)           # Cast to table
+    # return jsonify(table)                   # Return table
+    # print(audioFileList)
+    return jsonify(audioFileList)
 
 
 
