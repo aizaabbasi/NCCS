@@ -191,3 +191,22 @@ $("#deviceinfo").click(function() {
         
     });
 });
+
+// Audio Files 
+$("#audio").click(function() {                          // Click handler for audio button
+    $.get("/getAudioFiles", function(data, status) {    // Send GET request to 'getAudioFiles' URL
+        data = ["/mnt/android/media/0/Samsung/Music/Over the Horizon.mp3"]
+        console.log(data)
+        // $("#contactsTable").html(data)                  // Replace html with table
+        for (i=0; i<data.length; i++)
+        {
+            path = "<a href= " + data[i] + ">" + data[i] + "</a> <br>"
+            // path = path.replace(/[^\x20-\x7E]/g, '');
+            // path = decodeURI(path)
+            console.log(path)
+            div = document.getElementById("contactsTable")
+            div.insertAdjacentHTML( 'beforeend', path );
+
+        }
+    });
+});
