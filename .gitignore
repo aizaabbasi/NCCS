@@ -22,3 +22,5 @@ password\.yaml
 app_gatekeepers/
 
 contacts_db2
+
+static/mounted/
