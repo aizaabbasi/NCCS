@@ -222,10 +222,13 @@ def mountDeviceImage():
 def mountImage(password):
     '''Function to mount image file'''
     path = os.getcwd()
-    mountCommand = "mount -o loop \"" + path + '/android.img\" /mnt/android'
+    mountPath = path + "/static/mounted/"
+    if not os.path.isdir(mountPath):
+        os.mkdir(mountPath)
+    mountCommand = "mount -o loop \"" + path + '/android.img\" \"' + mountPath + '\"'
     # if mnt already exists
-    unmountCmd = 'umount /mnt/android'
-    if os.path.isdir('/mnt/android'):
+    unmountCmd = 'umount \"' + mountPath + '\"'
+    if os.path.isdir(mountPath):
         # Unmount image
         try:
             subprocess.call('echo {} | sudo -S {}'.format(password, unmountCmd), shell=True)
@@ -262,7 +265,7 @@ def takeOwnership(filename):
 @app.route('/getContacts', methods=['GET'])
 def readContacts():
     '''Function to read contacts'''
-    findCommand = "find /mnt/android -name contacts2.db"
+    findCommand = "find ./static/mounted -name contacts2.db"
     contactsPath = subprocess.check_output('echo {} | sudo -S {}'.format(password,findCommand), shell=True)
     contactsPath = (contactsPath.decode('utf-8')).split('\n')
     contactsPath = contactsPath[0]
@@ -317,7 +320,7 @@ def readContacts():
 @app.route('/getSMS', methods=['GET'])
 def readSMS():
     '''Function to read SMS (For Android 5.0'''
-    findCommand = "find /mnt/android -name mmssms.db"
+    findCommand = "find ./static/mounted -name mmssms.db"
     # smsPath = subprocess.check_output('echo {} | sudo -S {}'.format(password,findCommand), shell=True)
     smsPath = executeCommand(password, findCommand)
     # Copy file
@@ -358,7 +361,7 @@ def readSMS():
 @app.route('/getLogs', methods=['GET'])
 def getCallLogs():
     '''Get call logs'''
-    findCmd = 'find /mnt/android -name calllog.db'
+    findCmd = 'find ./static/mounted -name calllog.db'
     logsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + logsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
@@ -391,7 +394,7 @@ def getCallLogs():
 @app.route('/getWhatsappLocations', methods=['GET'])
 def getCallLocations():
     '''Get whatsapp locations'''
-    findCmd = 'find /mnt/android -name msgstore.db'
+    findCmd = 'find ./static/mounted -name msgstore.db'
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
@@ -428,7 +431,7 @@ def getCallLocations():
 @app.route('/getLocations', methods=['GET'])
 def getLocations():
     '''Get locations'''
-    findCmd = 'find /mnt/android -name gmm_sync.db'
+    findCmd = 'find ./static/mounted -name gmm_sync.db'
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
@@ -478,7 +481,7 @@ def index():
 
 @app.route('/getFacebookUserName', methods=['GET'])
 def getFacebookUserName():
-    findCmd = 'find /mnt/android -name app_gatekeepers'
+    findCmd = 'find ./static/mounted -name app_gatekeepers'
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp -r ' + locationsPath +     ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
@@ -502,7 +505,7 @@ def getFacebookUserName():
 
 @app.route('/getFacebookContacts', methods=['GET'])
 def getFacebookContacts():
-    findCmd = 'find /mnt/android -name contacts_db2'
+    findCmd = 'find ./static/mounted -name contacts_db2'
     locationsPath = executeCommand(password,findCmd)
     print (locationsPath,"***********")
 
@@ -546,7 +549,7 @@ def getFacebookContacts():
 
 @app.route('/getWhatsappContacts', methods=['GET'])
 def getWhatsappContacts():
-    findCmd = 'find /mnt/android -name wa.db'
+    findCmd = 'find ./static/mounted -name wa.db'
     locationsPath = executeCommand(password,findCmd)
     print (locationsPath,"***********")
 
@@ -588,7 +591,7 @@ def getWhatsappContacts():
 @app.route('/getWhatsappMessages', methods=['GET'])
 def getWhatsappMessages():
  
-    findCmd = 'find /mnt/android -name msgstore.db'
+    findCmd = 'find ./static/mounted -name msgstore.db'
     locationsPath = executeCommand(password,findCmd)
     print (locationsPath,"***********")
 
@@ -639,7 +642,7 @@ def getWhatsappMessages():
      
 @app.route('/getWhatsappGroups', methods=['GET'])
 def getWhatsappGroups():
-    findCmd = 'find /mnt/android -name msgstore.db'
+    findCmd = 'find ./static/mounted -name msgstore.db'
     locationsPath = executeCommand(password,findCmd)
     print (locationsPath,"***********")
 
@@ -800,7 +803,7 @@ def getDeviceInfo():
 def audioSearch():
     '''Return list of audio files'''
     audioList = []  # This will have all the files
-    audioFileList = ad.getFiles('/mnt/android/')    # Call the function to get files
+    audioFileList = ad.getFiles('./static/mounted')    # Call the function to get files
     
     # Iterate over the list of files to convert them to table format
     # for x in audioFileList:
