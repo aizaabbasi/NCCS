@@ -310,10 +310,10 @@ def readContacts():
 
     filterList = []
     # Convert contacts list to JSON
-    print (contactsList)
+    # print (contactsList)
     # return jsonify({'contacts':contactsList})
     table = ContactsTable(contactsList)
-    print (table)
+    # print (table)
     # return render_template('contacts.html',contactsList=table)
     return jsonify(table)
         
@@ -802,7 +802,7 @@ def getDeviceInfo():
 @app.route('/getAudioFiles', methods=['GET'])
 def audioSearch():
     '''Return list of audio files'''
-    audioList = []  # This will have all the files
+    # audioList = []  # This will have all the files
     audioFileList = ad.getFiles('./static/mounted')    # Call the function to get files
     
     # Iterate over the list of files to convert them to table format
