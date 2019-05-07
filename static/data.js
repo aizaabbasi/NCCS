@@ -1,6 +1,11 @@
+$(document).ready(function () {
+    $("#table_div").hide() 
+});
+
 // Make image
 $("#makeImage").click(function(e) {
     e.preventDefault()
+    $("#table_div").hide()
     var partitionSize = 0
     progressbar = `<div class="progress">
     <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" style="width:0%; color: black;">0%</div>
@@ -54,6 +59,7 @@ $("#makeImage").click(function(e) {
 // Mount image
 $("#mountImage").click(function(e) {
     e.preventDefault()
+    $("#table_div").hide()
     // Mount image
     $.get("/mountImage", function(data, status) {
         console.log(data)
@@ -64,6 +70,7 @@ $("#mountImage").click(function(e) {
 // Get Contacts
 $("#contacts").click(function(e) {
     e.preventDefault()
+    $("#table_div").hide()
     $.get("/getContacts", function(data, status) {
         console.log(data)
         // document.write(data)
@@ -73,6 +80,7 @@ $("#contacts").click(function(e) {
 
 // Get SMS
 $("#sms").click(function() {
+    $("#table_div").hide()
     $.get("/getSMS", function(data, status) {
         console.log(data)
         // document.write(data)
@@ -83,6 +91,7 @@ $("#sms").click(function() {
 
 // Get call logs
 $("#call-logs").click(function() {
+    $("#table_div").hide()
     $.get("/getLogs", function(data, status) {
         console.log(data)
         // document.write(data)
@@ -93,6 +102,7 @@ $("#call-logs").click(function() {
 
 // Google Map locations
 $("#locations").click(function() {
+    $("#table_div").hide()
     $.get("/getLocations", function(data, status) {
         var path = "<iframe src=/static/map.html style=\"width:100%; height:500px\"></iframe>"
         path = path.replace(/[^\x20-\x7E]/g, '');
@@ -103,6 +113,7 @@ $("#locations").click(function() {
 
 // Whatsapp locations
 $("#whatsappLocations").click(function() {
+    $("#table_div").hide()
     $.get("/getWhatsappLocations", function(data, status) {
         var path = "<iframe src=/static/WhatsappMap.html style=\"width:100%; height:500px\"></iframe>"
         path = path.replace(/[^\x20-\x7E]/g, '');
@@ -112,17 +123,16 @@ $("#whatsappLocations").click(function() {
 });
 // Facebook Profile
 $("#facebookprofile").click(function() {
+    $("#table_div").hide()
     $.get("/getFacebookUserName", function(data, status) {
         console.log(data);
-        window.open(data, '_blank');
-
-
-        
-        
+        window.open(data, '_blank');        
     });
 });
+
 // Facebook Contacts
 $("#facebookcontacts").click(function() {
+    $("#table_div").hide()
     $.get("/getFacebookContacts", function(data, status) {
         console.log(data)
         $("#contactsTable").html(data)
@@ -133,33 +143,32 @@ $("#facebookcontacts").click(function() {
 
 // Whatsapp Contacts
 $("#whatsappcontacts").click(function() {
+    $("#table_div").hide()
     $.get("/getWhatsappContacts", function(data, status) {
         console.log(data)
         $("#contactsTable").html(data)
-      
-        
     });
 });
 
 // Whatsapp Chat
 $("#whatsappmessages").click(function() {
+    $("#table_div").hide()
     $.get("/getWhatsappMessages", function(data, status) {
         console.log(data)
         $("#contactsTable").html(data)
-      
-        
     });
 });
 
 // Whatsapp Groups 
 $("#whatsappgroups").click(function() {
+    $("#table_div").hide()
     $.get("/getWhatsappGroups", function(data, status) {
         console.log(data)
         $("#contactsTable").html(data)
-      
-        
+
     });
 });
+
 // Synced Accounts 
 $("#syncaccounts").click(function() {
     $.get("/getSyncedAccounts", function(data, status) {
@@ -184,6 +193,7 @@ $("#syncaccounts").click(function() {
 
 // Device Info 
 $("#deviceinfo").click(function() {
+    $("#table_div").hide()
     $.get("/getDeviceInfo", function(data, status) {
         console.log(data)
         $("#contactsTable").html(data)
@@ -194,20 +204,28 @@ $("#deviceinfo").click(function() {
 
 // Audio Files 
 $("#audio").click(function() {                          // Click handler for audio button
+    $("#table_div").show()
     $.get("/getAudioFiles", function(data, status) {    // Send GET request to 'getAudioFiles' URL
         $("#contactsTable").html("")
-        console.log(data)
-        // $("#contactsTable").html(data)                  // Replace html with table
+        // $("#contactsTable").append('<table class="table table-striped">')
+        // $("#contactsTable").append("<thead> <tr> <th> File </th> </tr> </thead>")
+        // $("#contactsTable").append("<tbody>")
+        // console.log(data)
         for (i=0; i<data.length; i++)
         {
             var temp = encodeURI(data[i])
-            console.log(temp)
-            path = "<a href= " + temp + ">" + data[i] + "</a> <br>"
-            // path = path.replace(/[^\x20-\x7E]/g, '');
-            // path = decodeURI(path)
-            div = document.getElementById("contactsTable")
-            div.insertAdjacentHTML( 'beforeend', path );
-
+            path = "<a href= " + temp + ">" + data[i] + "</a>"
+            $("#table_div").append("<tr><td>" + path + "</td></tr>");
+            // div = document.getElementById("contactsTable")
+            // $("#contactsTable").append("<tr>")
+            // $("#contactsTable").append("<td>")
+            // // div.insertAdjacentHTML( 'beforeend', path );
+            // $("#contactsTable").append(path)
+            // $("#contactsTable").append("</td>")
+            // $("#contactsTable").append("</tr>")
         }
+        // $("#contactsTable").append("</tbody>")
+        // $("#contactsTable").append("</table>")
+
     });
 });
