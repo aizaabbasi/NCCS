@@ -3,10 +3,12 @@
 # according to the requirements.
 
 import os
+import matplotlib.pyplot as plt
 
 #This is to save other path
 # path="/home/aiza/myPython/mybackup/"
 path = "/mnt/android/"
+
 # This is to get the directory that the program
 # is currently running in.
 
@@ -140,3 +142,17 @@ def getFiles(dir_path):
 
 	# print ("Done with Search. Your file is here "+dir_path+"/Searching/")
 	# file_obj.close()
+
+	# Data to plot
+	labels = 'MP3', 'WMA', 'XMF', 'OGG', 'M4A', 'WAV'
+
+	sizes = [str(cmp3), str(cwma), str(cxmf), str(cogg),str(cm4a),str(cwav)]
+	colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue','blue', 'pink']
+	explode = (0.1, 0, 0, 0,0,0)  # explode 1st slice
+ 
+	# Plot
+	plt.pie(sizes, explode=explode, labels=labels, colors=colors,
+	autopct='%1.1f%%', shadow=True, startangle=140)
+ 
+	plt.axis('equal')
+	plt.show()
