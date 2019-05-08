@@ -229,3 +229,88 @@ $("#audio").click(function() {                          // Click handler for aud
 
     });
 });
+
+
+// Video Files 
+$("#video").click(function() {                          // Click handler for audio button
+    $("#table_div").show()
+    $.get("/getVideoFiles", function(data, status) {    // Send GET request to 'getVideoFiles' URL
+        $("#contactsTable").html("")
+        // $("#contactsTable").append('<table class="table table-striped">')
+        // $("#contactsTable").append("<thead> <tr> <th> File </th> </tr> </thead>")
+        // $("#contactsTable").append("<tbody>")
+        // console.log(data)
+        for (i=0; i<data.length; i++)
+        {
+            var temp = encodeURI(data[i])
+            path = "<a href= " + temp + ">" + data[i] + "</a>"
+            $("#table_div").append("<tr><td>" + path + "</td></tr>");
+            // div = document.getElementById("contactsTable")
+            // $("#contactsTable").append("<tr>")
+            // $("#contactsTable").append("<td>")
+            // // div.insertAdjacentHTML( 'beforeend', path );
+            // $("#contactsTable").append(path)
+            // $("#contactsTable").append("</td>")
+            // $("#contactsTable").append("</tr>")
+        }
+        // $("#contactsTable").append("</tbody>")
+        // $("#contactsTable").append("</table>")
+
+    });
+});
+// Documents 
+$("#documents").click(function() {                          // Click handler for audio button
+    $("#table_div").show()
+    $.get("/getDocuments", function(data, status) {    // Send GET request to 'getDocuments' URL
+        $("#contactsTable").html("")
+        // $("#contactsTable").append('<table class="table table-striped">')
+        // $("#contactsTable").append("<thead> <tr> <th> File </th> </tr> </thead>")
+        // $("#contactsTable").append("<tbody>")
+        // console.log(data)
+        for (i=0; i<data.length; i++)
+        {
+            var temp = encodeURI(data[i])
+            path = "<a href= " + temp + ">" + data[i] + "</a>"
+            $("#table_div").append("<tr><td>" + path + "</td></tr>");
+            // div = document.getElementById("contactsTable")
+            // $("#contactsTable").append("<tr>")
+            // $("#contactsTable").append("<td>")
+            // // div.insertAdjacentHTML( 'beforeend', path );
+            // $("#contactsTable").append(path)
+            // $("#contactsTable").append("</td>")
+            // $("#contactsTable").append("</tr>")
+        }
+        // $("#contactsTable").append("</tbody>")
+        // $("#contactsTable").append("</table>")
+
+    });
+});
+
+
+// Pictures 
+$("#pictures").click(function() {                          // Click handler for audio button
+    $("#table_div").show()
+    $.get("/getPictures", function(data, status) {    // Send GET request to 'getPictures' URL
+        $("#contactsTable").html("")
+        // $("#contactsTable").append('<table class="table table-striped">')
+        // $("#contactsTable").append("<thead> <tr> <th> File </th> </tr> </thead>")
+        // $("#contactsTable").append("<tbody>")
+        // console.log(data)
+        for (i=0; i<data.length; i++)
+        {
+            var temp = encodeURI(data[i])
+            path = "<a href= " + temp + ">" + data[i] + "</a>"
+            $("#table_div").append("<tr><td>" + path + "</td></tr>");
+            // div = document.getElementById("contactsTable")
+            // $("#contactsTable").append("<tr>")
+            // $("#contactsTable").append("<td>")
+            // // div.insertAdjacentHTML( 'beforeend', path );
+            // $("#contactsTable").append(path)
+            // $("#contactsTable").append("</td>")
+            // $("#contactsTable").append("</tr>")
+        }
+        // $("#contactsTable").append("</tbody>")
+        // $("#contactsTable").append("</table>")
+
+    });
+});
