@@ -21,6 +21,9 @@ import yaml
 import re
 import getpass
 import allAudSearch as ad
+import allVidSearch as vd
+import allDocSearch as ds
+import allPicSearch as ps
 import urllib
 
 # Contacts table
@@ -815,6 +818,54 @@ def audioSearch():
     # print(audioFileList)
     return jsonify(audioFileList)
 
+@app.route('/getVideoFiles', methods=['GET'])
+def videoSearch():
+    '''Return list of video files'''
+    # videoList = []  # This will have all the files
+    videoFileList = vd.getFiles('./static/mounted')    # Call the function to get files
+    
+    # Iterate over the list of files to convert them to table format
+    # for x in videoFileList:
+    #     tempFile = dict(videoFiles=x)    # Add to dictionary
+    #     videoList.append(tempFile)          # Add dictionary to list
+
+    # table = videoFiles(videoList)           # Cast to table
+    # return jsonify(table)                   # Return table
+    # print(videoFileList)
+    return jsonify(videoFileList)
+
+
+@app.route('/getDocuments', methods=['GET'])
+def docSearch():
+    '''Return list of documents'''
+    # docList = []  # This will have all the files
+    docFileList = ds.getFiles('./static/mounted')    # Call the function to get files
+    
+    # Iterate over the list of files to convert them to table format
+    # for x in docFileList:
+    #     tempFile = dict(docFiles=x)    # Add to dictionary
+    #     docList.append(tempFile)          # Add dictionary to list
+
+    # table = DocFiles(docList)           # Cast to table
+    # return jsonify(table)                   # Return table
+    # print(docFileList)
+    return jsonify(docFileList)
+
+@app.route('/getPictures', methods=['GET'])
+def picSearch():
+    '''Return list of pictures'''
+    # picList = []  # This will have all the files
+    picFileList = ps.getFiles('./static/mounted')    # Call the function to get files
+    
+    # Iterate over the list of files to convert them to table format
+    # for x in picFileList:
+    #     tempFile = dict(picFiles=x)    # Add to dictionary
+    #     picList.append(tempFile)          # Add dictionary to list
+
+    # table = picFiles(picList)           # Cast to table
+    # return jsonify(table)                   # Return table
+    # print(picFileList)
+    return jsonify(picFileList)
 
 
     
