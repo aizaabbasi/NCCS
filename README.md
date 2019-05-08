@@ -4,7 +4,7 @@
 - Merged (Aiza)
 
 # Installing Dependencies
-pip install -r requirements.txt
+- pip install -r requirements.txt
 
 # How to Run
 - sudo python3 Extraction.py
