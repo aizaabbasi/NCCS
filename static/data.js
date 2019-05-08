@@ -204,6 +204,7 @@ $("#deviceinfo").click(function() {
 
 // Audio Files 
 $("#audio").click(function() {                          // Click handler for audio button
+    $("#table_div").html("")
     $("#table_div").show()
     $.get("/getAudioFiles", function(data, status) {    // Send GET request to 'getAudioFiles' URL
         $("#contactsTable").html("")
@@ -233,6 +234,7 @@ $("#audio").click(function() {                          // Click handler for aud
 
 // Video Files 
 $("#video").click(function() {                          // Click handler for audio button
+    $("#table_div").html("")
     $("#table_div").show()
     $.get("/getVideoFiles", function(data, status) {    // Send GET request to 'getVideoFiles' URL
         $("#contactsTable").html("")
@@ -260,6 +262,7 @@ $("#video").click(function() {                          // Click handler for aud
 });
 // Documents 
 $("#documents").click(function() {                          // Click handler for audio button
+    $("#table_div").html("")
     $("#table_div").show()
     $.get("/getDocuments", function(data, status) {    // Send GET request to 'getDocuments' URL
         $("#contactsTable").html("")
@@ -289,6 +292,7 @@ $("#documents").click(function() {                          // Click handler for
 
 // Pictures 
 $("#pictures").click(function() {                          // Click handler for audio button
+    $("#table_div").html("")
     $("#table_div").show()
     $.get("/getPictures", function(data, status) {    // Send GET request to 'getPictures' URL
         $("#contactsTable").html("")
