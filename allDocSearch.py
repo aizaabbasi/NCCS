@@ -62,7 +62,7 @@ def getFiles(dir_path):
 				for key in dic.keys():
 					path = key
 					filename = dic[key]
-					row =path + "," + filename + "\n"
+					row =path + "/" + filename + "\n"
 					fileList.append(row)
 					#csvobj.write(row)
 		
@@ -77,7 +77,7 @@ def getFiles(dir_path):
 				for key in dic.keys():
 					path = key
 					filename = dic[key]
-					row =path + "," + filename + "\n"
+					row =path + "/" + filename + "\n"
 					fileList.append(row)
 					#csvobj.write(row)
 
@@ -92,7 +92,7 @@ def getFiles(dir_path):
 				for key in dic.keys():
 					path = key
 					filename = dic[key]
-					row =path + "," + filename + "\n"
+					row =path + "/" + filename + "\n"
 					fileList.append(row)
 					#csvobj.write(row)
 
@@ -107,7 +107,7 @@ def getFiles(dir_path):
 				for key in dic.keys():
 					path = key
 					filename = dic[key]
-					row =path + "," + filename + "\n"
+					row =path + "/" + filename + "\n"
 					# csvobj.write(row)
 	
 			elif file.endswith('.epub'):
@@ -121,7 +121,7 @@ def getFiles(dir_path):
 				for key in dic.keys():
 					path = key
 					filename = dic[key]
-					row =path + "," + filename + "\n"
+					row =path + "/" + filename + "\n"
 					fileList.append(row)
 					#csvobj.write(row)
 
