@@ -1,0 +1,29 @@
+audio:
+  - .mp3
+  - .wma
+  - .xmf
+  - .ogg
+  - .m4a
+  - .wav
+
+documents:
+  - .doc
+  - .docx
+  - .pdf
+  - .pptx
+  - .xlsx
+  - .epub
+
+video:
+  - .3gpp
+  - .mp4
+  - .mkv
+  - .mpts
+  - .webm
+
+pictures:
+  - .jpg
+  - .png
+  - .bmp
+  - .gif
+  - .webp
