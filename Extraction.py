@@ -196,23 +196,26 @@ def makeImage():
 def getProgress():
     '''Function to get file writing progress'''
     # Get path of img file
-    path = os.getcwd()
-    filePath = path + '/android.img'
-    fileSize = os.path.getsize(filePath)        # Get size of img file
-    global partitionSize
-    partitionSize = int(partitionSize)
-    fileSize = int(fileSize)/1024               # Converting to KBs
-    # print("\n")
-    # Keep running till file writing is not complete
-    # while fileSize < partitionSize:
-    fileSize = os.path.getsize(filePath)        # Get size of img file
-    fileSize = int(fileSize)/1024
-    perc = (fileSize/partitionSize) * 100   # Get percentage
-    # perc = round(perc)
-    # perc = str(perc)
-    perc = ("%.1f" % perc)
-    # print("Progress: " + perc + "%", end='\r')
-    emit('progress', {'data': perc})
+    try:
+        path = os.getcwd()
+        filePath = path + '/android.img'
+        fileSize = os.path.getsize(filePath)        # Get size of img file
+        global partitionSize
+        partitionSize = int(partitionSize)
+        fileSize = int(fileSize)/1024               # Converting to KBs
+        # print("\n")
+        # Keep running till file writing is not complete
+        # while fileSize < partitionSize:
+        fileSize = os.path.getsize(filePath)        # Get size of img file
+        fileSize = int(fileSize)/1024
+        perc = (fileSize/partitionSize) * 100   # Get percentage
+        # perc = round(perc)
+        # perc = str(perc)
+        perc = ("%.1f" % perc)
+        # print("Progress: " + perc + "%", end='\r')
+        emit('progress', {'data': perc})
+    except:
+        pass
 
     # print("\nDone")
 
@@ -806,7 +809,13 @@ def getDeviceInfo():
 def audioSearch():
     '''Return list of audio files'''
     # audioList = []  # This will have all the files
-    audioFileList = ad.getFiles('./static/mounted')    # Call the function to get files
+    path = os.getcwd()
+    graphPath = path + "/static/graphs/"
+    if not os.path.isdir(graphPath):
+        os.mkdir(graphPath)
+
+    graphPath = graphPath + '/audio.png'
+    audioFileList = ad.getFiles('./static/mounted', graphPath, 'audio')    # Call the function to get files
     
     # Iterate over the list of files to convert them to table format
     # for x in audioFileList:
@@ -822,7 +831,13 @@ def audioSearch():
 def videoSearch():
     '''Return list of video files'''
     # videoList = []  # This will have all the files
-    videoFileList = vd.getFiles('./static/mounted')    # Call the function to get files
+    path = os.getcwd()
+    graphPath = path + "/static/graphs/"
+    if not os.path.isdir(graphPath):
+        os.mkdir(graphPath)
+
+    graphPath = graphPath + '/videos.png'
+    videoFileList = ad.getFiles('./static/mounted', graphPath, 'video')    # Call the function to get files
     
     # Iterate over the list of files to convert them to table format
     # for x in videoFileList:
@@ -839,7 +854,13 @@ def videoSearch():
 def docSearch():
     '''Return list of documents'''
     # docList = []  # This will have all the files
-    docFileList = ds.getFiles('./static/mounted')    # Call the function to get files
+    path = os.getcwd()
+    graphPath = path + "/static/graphs/"
+    if not os.path.isdir(graphPath):
+        os.mkdir(graphPath)
+    
+    graphPath = graphPath + '/documents.png'
+    docFileList = ad.getFiles('./static/mounted', graphPath, 'documents')    # Call the function to get files
     
     # Iterate over the list of files to convert them to table format
     # for x in docFileList:
@@ -855,7 +876,13 @@ def docSearch():
 def picSearch():
     '''Return list of pictures'''
     # picList = []  # This will have all the files
-    picFileList = ps.getFiles('./static/mounted')    # Call the function to get files
+    path = os.getcwd()
+    graphPath = path + "/static/graphs/"
+    if not os.path.isdir(graphPath):
+        os.mkdir(graphPath)
+
+    graphPath = graphPath + '/pictures.png'
+    picFileList = ad.getFiles('./static/mounted', graphPath, 'pictures')    # Call the function to get files
     
     # Iterate over the list of files to convert them to table format
     # for x in picFileList:
