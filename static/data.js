@@ -208,8 +208,14 @@ $("#audio").click(function() {                          // Click handler for aud
     $("#table_div").show()
     $.get("/getAudioFiles", function(data, status) {    // Send GET request to 'getAudioFiles' URL
         $("#contactsTable").html("")
+        // Graph
+        var path = "<center><iframe src=/static/graphs/audio.png style=\"width:100%; height:500px\"></iframe></center>"
+        path = path.replace(/[^\x20-\x7E]/g, '');
+        console.log(path)
+        $("#contactsTable").html(path)
+
         // $("#contactsTable").append('<table class="table table-striped">')
-        // $("#contactsTable").append("<thead> <tr> <th> File </th> </tr> </thead>")
+        $("#table_div").append("<thead> <tr> <th> File </th> </tr> </thead>")
         // $("#contactsTable").append("<tbody>")
         // console.log(data)
         for (i=0; i<data.length; i++)
@@ -238,8 +244,13 @@ $("#video").click(function() {                          // Click handler for aud
     $("#table_div").show()
     $.get("/getVideoFiles", function(data, status) {    // Send GET request to 'getVideoFiles' URL
         $("#contactsTable").html("")
+        // Graph
+        var path = "<center><iframe src=/static/graphs/videos.png style=\"width:100%; height:500px\"></iframe></center>"
+        path = path.replace(/[^\x20-\x7E]/g, '');
+        console.log(path)
+        $("#contactsTable").html(path)
         // $("#contactsTable").append('<table class="table table-striped">')
-        // $("#contactsTable").append("<thead> <tr> <th> File </th> </tr> </thead>")
+        $("#table_div").append("<thead> <tr> <th> File </th> </tr> </thead>")
         // $("#contactsTable").append("<tbody>")
         // console.log(data)
         for (i=0; i<data.length; i++)
@@ -266,8 +277,13 @@ $("#documents").click(function() {                          // Click handler for
     $("#table_div").show()
     $.get("/getDocuments", function(data, status) {    // Send GET request to 'getDocuments' URL
         $("#contactsTable").html("")
+        // Graph
+        var path = "<center><iframe src=/static/graphs/documents.png style=\"width:100%; height:500px\"></iframe></center>"
+        path = path.replace(/[^\x20-\x7E]/g, '');
+        console.log(path)
+        $("#contactsTable").html(path)
         // $("#contactsTable").append('<table class="table table-striped">')
-        // $("#contactsTable").append("<thead> <tr> <th> File </th> </tr> </thead>")
+        $("#table_div").append("<thead> <tr> <th> File </th> </tr> </thead>")
         // $("#contactsTable").append("<tbody>")
         // console.log(data)
         for (i=0; i<data.length; i++)
@@ -296,8 +312,13 @@ $("#pictures").click(function() {                          // Click handler for 
     $("#table_div").show()
     $.get("/getPictures", function(data, status) {    // Send GET request to 'getPictures' URL
         $("#contactsTable").html("")
+        // Graph
+        var path = "<center><iframe src=/static/graphs/pictures.png style=\"width:100%; height:500px\"></iframe></center>"
+        path = path.replace(/[^\x20-\x7E]/g, '');
+        console.log(path)
+        $("#contactsTable").html(path)
         // $("#contactsTable").append('<table class="table table-striped">')
-        // $("#contactsTable").append("<thead> <tr> <th> File </th> </tr> </thead>")
+        $("#table_div").append("<thead> <tr> <th> File </th> </tr> </thead>")
         // $("#contactsTable").append("<tbody>")
         // console.log(data)
         for (i=0; i<data.length; i++)
