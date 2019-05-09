@@ -4,6 +4,7 @@
 
 import os
 import matplotlib.pyplot as plt
+import yaml
 
 #This is to save other path
 # path="/home/aiza/myPython/mybackup/"
@@ -18,141 +19,81 @@ dir_path = path
 
 #count for total files
 
-def getFiles(dir_path):
-	'''Function to get miscellaneous files'''
-	num=count=0
-	cmp3=cwma=cxmf=cogg=cm4a=cwav=0
+def readExtensionsFile(file_type):
+	path = os.getcwd()          		# Get current working directory
+	path = path + '/extensions.yaml'  	# Get path of help file
+	extensions = []
+    # Open and print help file
+	with open(path,'r') as stream:
+		try:
+			extensions = yaml.safe_load(stream)
+		except yaml.YAMLError as exc:
+			print(exc)
 
-	fileList = []		# This will hold the list of files
-## How to Run
-	# file_obj = open("allAud_csv_output.txt", "w")
+	return extensions[file_type]
 
-	# csvobj = open("allAud_csv.csv", "w")
+def getFiles(dir_path, graph_path, file_type):
+	'''Function to get audio files'''
 
-	# columnTitleRow = "Path, File Name\n"
-	# csvobj.write(columnTitleRow)
-
+	fileList = []		
+	extensions = readExtensionsFile(file_type)		# Read extensions from file
+	countsDict = {}							# Dictionary that hold count of each type of file
+	# Initialize dictionary with 'ext:0'
+	for ext in extensions:
+		countsDict.update({ext:0})
+	
 	for root, dirs, files in os.walk(dir_path):
 		
 		for file in files:
-				# change the extension from '.DOC to  
-			# the one of your choice.
-			if file.endswith('.mp3'):
-				
-				dic = { root : str(file)} #dictionary
-				
-				# print (dic, file=file_obj)
-				num=num+1
-				cmp3=cmp3+1
+			# Iterate through each extension
+			for ext in extensions:
+				# Check if file ends with the supplied extension
+				if file.endswith(ext):
+					dic = { root : str(file)} 				# Dictionary
+					countsDict[ext] = countsDict[ext] + 1	# Increment count of file type
 
-				for key in dic.keys():
-					path = key
-					filename = dic[key]
-					row = path + "/" + filename + "\n"
-					fileList.append(row)
-					# csvobj.write(row)
+					for key in dic.keys():
+						path = key
+						filename = dic[key]
+						row = path + "/" + filename + "\n"
+						fileList.append(row)
 
-			elif file.endswith('.wma'):
-			
-				dic = { root : str(file)} #dictionary
-				
-				# print (dic, file=file_obj)
-				num=num+1
-				cwma=cwma+1
+	# Calculate total amount of files
+	total = 0
+	for key, value in countsDict.items():
+		total += value
 
-				for key in dic.keys():
-					path = key
-					filename = dic[key]
-					row =path + "," + filename + "\n"
-					fileList.append(row)
-					# csvobj.write(row)
-			
-			elif file.endswith('.xmf'):
-			
-				dic = { root : str(file)} #dictionary
-				
-				# print (dic, file=file_obj)
-				num=num+1
-				cxmf=cxmf+1
+	# Calculate percentage of each file
+	labels = []
+	sizes = []
+	for ext, freq in countsDict.items():
+		perc = calculatePercentage(freq, total)
+		sizes.append(perc)
+		label = ext + " " + str(perc) + ' %'
+		labels.append(label)
 
-				for key in dic.keys():
-					path = key
-					filename = dic[key]
-					row =path + "/" + filename + "\n"
-					fileList.append(row)
-					# csvobj.write(row)
-
-			elif file.endswith('.ogg'):
-			
-				dic = { root : str(file)} #dictionary
-				
-				# print (dic, file=file_obj)
-				num=num+1
-				cogg=cogg+1
-
-				for key in dic.keys():
-					path = key
-					filename = dic[key]
-					row =path + "/" + filename + "\n"
-					fileList.append(row)
-					# csvobj.write(row)
-
-			elif file.endswith('.m4a'):
-			
-				dic = { root : str(file)} #dictionary
-				
-				# print (dic, file=file_obj)
-				num=num+1
-				cm4a=cm4a+1
-
-				for key in dic.keys():
-					path = key
-					filename = dic[key]
-					row =path + "/" + filename + "\n"
-					fileList.append(row)
-					# csvobj.write(row)
-		
-			elif file.endswith('.wav'):
-			
-				dic = { root : str(file)} #dictionary
-				
-				# print (dic, file=file_obj)
-				num=num+1
-				cwav=cwav+1
-
-				for key in dic.keys():
-					path = key
-					filename = dic[key]
-					row =path + "/" + filename + "\n"
-					fileList.append(row)
-					# csvobj.write(row)
-
-			else:	count=count+1
-
-	return fileList
-
-
-	# print ("\nTotal files found here : "+str(cmp3)+ " plus " +str(cwma)+ " plus " +str(cxmf)+ " plus " +str(cogg)+ " plus " +str(cm4a)+ " plus " +str(cwav)+" equals "+str(num), file=file_obj)
-
-	# print ("\nMP3s : "+str(cmp3)+ " WMAs : "+str(cwma)+ " XMFs : "+str(cxmf)+ " OGGs : "+str(cogg)+ " M4As : "+str(cm4a)+ " WAVs : "+str(cwav))
-
-	# print ("\nMP3s : "+str(cmp3)+ " WMAs : "+str(cwma)+ " XMFs : "+str(cxmf)+ " OGGs : "+str(cogg)+ " M4As : "+str(cm4a)+ " WAVs : "+str(cwav), file=file_obj)
-
-	# print ("\nTotal other files found here: "+str(count),file=file_obj)
-
-	# print ("Done with Search. Your file is here "+dir_path+"/Searching/")
-	# file_obj.close()
-
-	# Data to plot
-	labels = 'MP3', 'WMA', 'XMF', 'OGG', 'M4A', 'WAV'
-
-	sizes = [str(cmp3), str(cwma), str(cxmf), str(cogg),str(cm4a),str(cwav)]
+	# sizes = [str(cmp3), str(cwma), str(cxmf), str(cogg),str(cm4a),str(cwav)]
 	colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue','blue', 'pink']
-	explode = (0.1, 0, 0, 0,0,0)  # explode 1st slice
+	explode = []
+	# Set explode values
+	for x in labels:
+		explode.append(0.3)
+
+	explodeTuple = tuple(explode)
+
+	# explode = (0.1, 0, 0, 0,0,0)  # explode 1st slice
  
 	# Plot
-	plt.pie(sizes, explode=explode, labels=labels, colors=colors,
-	autopct='%1.1f%%', shadow=True, startangle=140)
+	patches, _ = plt.pie(sizes)
  
 	plt.axis('equal')
-	plt.show()
+	# plt.show()
+	plt.legend(patches, labels, loc='upper right')		# Legend
+	plt.savefig(graph_path)								# Save figure
+	return fileList
+
+def calculatePercentage(number, total):
+	'''Calculate percentage'''
+	perc = (number/total) * 100
+	perc = round(perc,2)
+	return perc
