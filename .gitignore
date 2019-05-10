@@ -26,3 +26,5 @@ contacts_db2
 static/mounted/
 
 static/map\.html
+
+\.vscode/launch\.json
