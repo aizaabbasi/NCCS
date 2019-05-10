@@ -1034,9 +1034,6 @@ def getSkypeMessages():
 
     ###########################################################################
     messagesList = {}
-    # Initialize empty conversation list
-    for k, v in contactsList.items():
-        messagesList.update({k:[]})
 
     for x in filter1:
         # Connect to database
@@ -1053,14 +1050,27 @@ def getSkypeMessages():
         finalResult = result.fetchall()
 
         accountName = x.replace('.db','')
+
+        # Initializing dictionary of empty conversations
+        for res in finalResult:
+            res = res.nsp_data
+            res = json.loads(res)
+            conversationLink = checkKey(res, '_serverMessages')[0]
+            conversationLink = conversationLink['conversationLink']
+            try:
+                messagesList.update({conversationLink:[]})
+            except:
+                pass
         
+        # Get data
         for res in finalResult:
             res = res.nsp_data
             res = json.loads(res)
             creator,content = None,None
             creator = checkKey(res,'creator')
             content = checkKey(res,'content')
-            conversationID = checkKey(res, 'conversationId')
+            conversationLink = checkKey(res, '_serverMessages')[0]
+            conversationLink = conversationLink['conversationLink']
             # ID to name resolution
             for key, value in contactsList.items():
                 if key == creator:
@@ -1070,20 +1080,22 @@ def getSkypeMessages():
             # Group messages together
             try:
                 tempMessage = dict(account=accountName, name=creator, message=content)
-                messagesList[conversationID].append(tempMessage)
+                messagesList[conversationLink].append(tempMessage)
             except:
                 pass
 
+    # Reverse list
     for key, value in messagesList.items():
         messagesList[key].reverse()
 
+    # Format for table
     finalMessageList = []
     for _, value in messagesList.items():
         for val in value:
             tempMsg = dict(account=val['account'], name=val['name'], message=val['message'])
             finalMessageList.append(tempMsg)
 
-
+    # Table
     table = SkypeMessages(finalMessageList)
     return jsonify(table)
 
