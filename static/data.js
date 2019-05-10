@@ -49,11 +49,6 @@ $("#makeImage").click(function(e) {
 
         });
     });
-    // $.get("/makeImage", function(data, status) {
-    //     console.log(data)
-    //     // document.write(data)
-    //     $("#contactsTable").html(data)
-    // });
 });
 
 // Mount image
@@ -73,7 +68,6 @@ $("#contacts").click(function(e) {
     $("#table_div").hide()
     $.get("/getContacts", function(data, status) {
         console.log(data)
-        // document.write(data)
         $("#contactsTable").html(data)
     });
 });
@@ -174,19 +168,6 @@ $("#syncaccounts").click(function() {
     $.get("/getSyncedAccounts", function(data, status) {
         console.log(data)
         $("#contactsTable").html(data)
-            
-    //     var tbl=$("<table/>").attr("id","mytable");
-    //     $("#div1").append(tbl);
-    //     for(var i=0;i<data.length;i++)
-    //     {
-    //         var tr="<tr>";
-    //         var td1="<td>"+data[i]+"</td>";
-
-
-    //     $("#contactsTable").append(tr+td1); 
-
-    // }   
-      
         
     });
 });
@@ -213,26 +194,13 @@ $("#audio").click(function() {                          // Click handler for aud
         path = path.replace(/[^\x20-\x7E]/g, '');
         console.log(path)
         $("#contactsTable").html(path)
-
-        // $("#contactsTable").append('<table class="table table-striped">')
         $("#table_div").append("<thead> <tr> <th> File </th> </tr> </thead>")
-        // $("#contactsTable").append("<tbody>")
-        // console.log(data)
         for (i=0; i<data.length; i++)
         {
             var temp = encodeURI(data[i])
             path = "<a href= " + temp + ">" + data[i] + "</a>"
             $("#table_div").append("<tr><td>" + path + "</td></tr>");
-            // div = document.getElementById("contactsTable")
-            // $("#contactsTable").append("<tr>")
-            // $("#contactsTable").append("<td>")
-            // // div.insertAdjacentHTML( 'beforeend', path );
-            // $("#contactsTable").append(path)
-            // $("#contactsTable").append("</td>")
-            // $("#contactsTable").append("</tr>")
         }
-        // $("#contactsTable").append("</tbody>")
-        // $("#contactsTable").append("</table>")
 
     });
 });
@@ -249,25 +217,14 @@ $("#video").click(function() {                          // Click handler for aud
         path = path.replace(/[^\x20-\x7E]/g, '');
         console.log(path)
         $("#contactsTable").html(path)
-        // $("#contactsTable").append('<table class="table table-striped">')
         $("#table_div").append("<thead> <tr> <th> File </th> </tr> </thead>")
-        // $("#contactsTable").append("<tbody>")
         // console.log(data)
         for (i=0; i<data.length; i++)
         {
             var temp = encodeURI(data[i])
             path = "<a href= " + temp + ">" + data[i] + "</a>"
             $("#table_div").append("<tr><td>" + path + "</td></tr>");
-            // div = document.getElementById("contactsTable")
-            // $("#contactsTable").append("<tr>")
-            // $("#contactsTable").append("<td>")
-            // // div.insertAdjacentHTML( 'beforeend', path );
-            // $("#contactsTable").append(path)
-            // $("#contactsTable").append("</td>")
-            // $("#contactsTable").append("</tr>")
         }
-        // $("#contactsTable").append("</tbody>")
-        // $("#contactsTable").append("</table>")
 
     });
 });
@@ -282,25 +239,14 @@ $("#documents").click(function() {                          // Click handler for
         path = path.replace(/[^\x20-\x7E]/g, '');
         console.log(path)
         $("#contactsTable").html(path)
-        // $("#contactsTable").append('<table class="table table-striped">')
         $("#table_div").append("<thead> <tr> <th> File </th> </tr> </thead>")
-        // $("#contactsTable").append("<tbody>")
         // console.log(data)
         for (i=0; i<data.length; i++)
         {
             var temp = encodeURI(data[i])
             path = "<a href= " + temp + ">" + data[i] + "</a>"
             $("#table_div").append("<tr><td>" + path + "</td></tr>");
-            // div = document.getElementById("contactsTable")
-            // $("#contactsTable").append("<tr>")
-            // $("#contactsTable").append("<td>")
-            // // div.insertAdjacentHTML( 'beforeend', path );
-            // $("#contactsTable").append(path)
-            // $("#contactsTable").append("</td>")
-            // $("#contactsTable").append("</tr>")
         }
-        // $("#contactsTable").append("</tbody>")
-        // $("#contactsTable").append("</table>")
 
     });
 });
@@ -317,25 +263,32 @@ $("#pictures").click(function() {                          // Click handler for 
         path = path.replace(/[^\x20-\x7E]/g, '');
         console.log(path)
         $("#contactsTable").html(path)
-        // $("#contactsTable").append('<table class="table table-striped">')
         $("#table_div").append("<thead> <tr> <th> File </th> </tr> </thead>")
-        // $("#contactsTable").append("<tbody>")
-        // console.log(data)
         for (i=0; i<data.length; i++)
         {
             var temp = encodeURI(data[i])
             path = "<a href= " + temp + ">" + data[i] + "</a>"
             $("#table_div").append("<tr><td>" + path + "</td></tr>");
-            // div = document.getElementById("contactsTable")
-            // $("#contactsTable").append("<tr>")
-            // $("#contactsTable").append("<td>")
-            // // div.insertAdjacentHTML( 'beforeend', path );
-            // $("#contactsTable").append(path)
-            // $("#contactsTable").append("</td>")
-            // $("#contactsTable").append("</tr>")
         }
-        // $("#contactsTable").append("</tbody>")
-        // $("#contactsTable").append("</table>")
+    });
+});
 
+// Get Skype Contacts
+$("#skypeContacts").click(function(e) {
+    e.preventDefault()
+    $("#table_div").hide()
+    $.get("/getSkypeContacts", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+    });
+});
+
+// Get Skype Messages
+$("#skypeMessages").click(function(e) {
+    e.preventDefault()
+    $("#table_div").hide()
+    $.get("/getSkypeMessages", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
     });
 });
