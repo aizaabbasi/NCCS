@@ -25,6 +25,8 @@ import allVidSearch as vd
 import allDocSearch as ds
 import allPicSearch as ps
 import urllib
+from os import listdir
+from os.path import isfile, join
 
 # Contacts table
 class ContactsTable(Table):
@@ -105,6 +107,23 @@ class AudioFiles(Table):
     classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
     audioFiles = Col('Files')
 
+# Skype Contacts Table
+class SkypeContacts(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    account = Col('Account')
+    name = Col('Name')
+    birthday = Col('Birthday')
+    city = Col('City')
+    country = Col('Country')
+    status = Col('Status')
+    phones = Col('Phones')
+
+# Skype Contacts Table
+class SkypeMessages(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    account = Col('Account')
+    name = Col('Name')
+    message = Col('Message')
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -895,7 +914,195 @@ def picSearch():
     return jsonify(picFileList)
 
 
+# Skype Contacts
+@app.route('/getSkypeContacts', methods=['GET'])
+def getSkypeContacts():
+    '''Get skype contacts'''
+    path = os.getcwd() + "/static/mounted/data/com.skype.raider/databases/"
+    files = [f for f in listdir(path) if isfile(join(path, f))]       # Read all files in directory
+    # List for excluding files that include a certain keywork
+    excludeList = ['google', 'aria', 'Aria', 'Call', 'appboy']
+    databaseFiles = []
+    # Filter out db files
+    for x in files:
+        if x.endswith('.db'):
+            databaseFiles.append(x)
+
+    filter1 = []
+    # Filter for database files
+    for x in databaseFiles:
+        filter = any(substring in x for substring in excludeList)       # Check for substrings from exclude list
+        if filter == False:
+            filter1.append(x)
+
+    contactsList = []
+    for x in filter1:
+        copyCommand = 'cp "' + path + x + '" \"' + os.getcwd() + '\"'
+        executeCommand(password, copyCommand)             # Copy files
+        takeOwnership(x)                                  # Take ownership
+
+        # Connect to database
+        engine = create_engine('sqlite:///' + x)   
+        connection = engine.connect()
+
+        metadata = db.MetaData()
+        # Get table data
+        profiles = db.Table('profilecachev8', metadata, autoload=True, autoload_with=engine)
+        select_stmt = select([profiles.c.nsp_data])
     
+        # Execute query
+        result = connection.execute(select_stmt)
+        finalResult = result.fetchall()
+
+        accountName = x.replace('.db','')
+        
+        for res in finalResult:
+            res = res.nsp_data
+            res = json.loads(res)
+            name,birthday,city,country,mood,phones = None,None,None,None,None,[]
+
+            # Retrieve tags if they exist
+            name = checkKey(res,'displayNameOverride')
+            birthday = checkKey(res,'birthday')
+            city = checkKey(res,'city')
+            country = checkKey(res,'country')
+            mood = checkKey(res,'mood')
+            phones = checkKey(res,'phones')
+            if phones:
+                phones = parseSkypePhones(phones)
+            else:
+                phones = None
+            
+            tempContact = dict(account=accountName, name=name, birthday=birthday, city=city, country=country, status=mood, phones=phones)
+            contactsList.append(tempContact)
+
+    table = SkypeContacts(contactsList)
+    return jsonify(table)
+
+
+# Skype Messages
+@app.route('/getSkypeMessages', methods=['GET'])
+def getSkypeMessages():
+    '''Get skype messages'''
+    path = os.getcwd() + "/static/mounted/data/com.skype.raider/databases/"
+    files = [f for f in listdir(path) if isfile(join(path, f))]       # Read all files in directory
+    # List for excluding files that include a certain keywork
+    excludeList = ['google', 'aria', 'Aria', 'Call', 'appboy']
+    databaseFiles = []
+    # Filter out db files
+    for x in files:
+        if x.endswith('.db'):
+            databaseFiles.append(x)
+
+    filter1 = []
+    # Filter for database files
+    for x in databaseFiles:
+        filter = any(substring in x for substring in excludeList)       # Check for substrings from exclude list
+        if filter == False:
+            filter1.append(x)
+
+
+    # This part is for ID to display name resolution
+    contactsList = {}
+    for x in filter1:
+        copyCommand = 'cp "' + path + x + '" \"' + os.getcwd() + '\"'
+        executeCommand(password, copyCommand)             # Copy files
+        takeOwnership(x)                                  # Take ownership
+
+        # Connect to database
+        engine = create_engine('sqlite:///' + x)   
+        connection = engine.connect()
+
+        metadata = db.MetaData()
+        # Get table data
+        profiles = db.Table('profilecachev8', metadata, autoload=True, autoload_with=engine)
+        select_stmt = select([profiles.c.nsp_data])
+    
+        # Execute query
+        result = connection.execute(select_stmt)
+        finalResult = result.fetchall()
+  
+        for res in finalResult:
+            res = res.nsp_data
+            res = json.loads(res)
+            name = None
+
+            # Retrieve tags if they exist
+            mri = checkKey(res, 'mri')
+            name = checkKey(res,'displayNameOverride')
+            contactsList.update({mri:name})
+
+    ###########################################################################
+    messagesList = {}
+    # Initialize empty conversation list
+    for k, v in contactsList.items():
+        messagesList.update({k:[]})
+
+    for x in filter1:
+        # Connect to database
+        engine = create_engine('sqlite:///' + x)   
+        connection = engine.connect()
+
+        metadata = db.MetaData()
+        # Get table data
+        profiles = db.Table('messagesv12', metadata, autoload=True, autoload_with=engine)
+        select_stmt = select([profiles.c.nsp_data])
+    
+        # Execute query
+        result = connection.execute(select_stmt)
+        finalResult = result.fetchall()
+
+        accountName = x.replace('.db','')
+        
+        for res in finalResult:
+            res = res.nsp_data
+            res = json.loads(res)
+            creator,content = None,None
+            creator = checkKey(res,'creator')
+            content = checkKey(res,'content')
+            conversationID = checkKey(res, 'conversationId')
+            # ID to name resolution
+            for key, value in contactsList.items():
+                if key == creator:
+                    creator = value
+                    break            
+
+            # Group messages together
+            try:
+                tempMessage = dict(account=accountName, name=creator, message=content)
+                messagesList[conversationID].append(tempMessage)
+            except:
+                pass
+
+    for key, value in messagesList.items():
+        messagesList[key].reverse()
+
+    finalMessageList = []
+    for _, value in messagesList.items():
+        for val in value:
+            tempMsg = dict(account=val['account'], name=val['name'], message=val['message'])
+            finalMessageList.append(tempMsg)
+
+
+    table = SkypeMessages(finalMessageList)
+    return jsonify(table)
+
+def checkKey(jsonDump, key):
+    '''Check if key exists in json dump'''
+    try:
+        return jsonDump[key]
+    except:
+        return
+
+def parseSkypePhones(phones):
+    '''Parse list of Skype phone numbers'''
+    phoneList = []
+    # Get phone number from json dump
+    for x in phones:
+        phoneList.append(x['number'])
+
+    return phoneList
+
 def main():
     try:
         cleanFirefox()
