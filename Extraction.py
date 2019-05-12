@@ -15,6 +15,8 @@ from flask_table import Table, Col
 import numpy as np
 from gmplot import gmplot
 from datetime import datetime
+import datetime
+
 import time
 from flask_socketio import SocketIO, emit
 import yaml
@@ -25,6 +27,8 @@ import allVidSearch as vd
 import allDocSearch as ds
 import allPicSearch as ps
 import urllib
+import csv
+from nested_lookup import nested_lookup, get_occurrence_of_key, get_occurrence_of_value
 
 # Contacts table
 class ContactsTable(Table):
@@ -105,6 +109,32 @@ class AudioFiles(Table):
     classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
     audioFiles = Col('Files')
 
+# Chrome Bookmarks Table
+class ChromeBookmarksTable(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    timestamp = Col('Timestamp')
+    name = Col('Name')
+    url = Col('Url')
+
+# Chrome Login Table
+class ChromeLoginTable(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    url = Col('Url')
+    username = Col('Username')
+    password = Col('Password')
+    times_used=Col('Times Used')
+
+# Chrome Login Table
+class ChromeLoginHistory(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    url = Col('Url')
+    title = Col('Title')
+    last_visit_time = Col('Last Visit Time')
+
+# Autofill Profile Table
+class AutofillProfileTable(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    autofill = Col('Autofill Profile')
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -141,7 +171,7 @@ def cleanFirefox():
     '''
     command = 'rm -r ~/.cache/mozilla/firefox/*.default/*' 
     print (command)
-    executeCommand('asim', command)
+    executeCommand(password, command)
 
 
 @app.route('/getPassword', methods=['POST'])
@@ -268,7 +298,7 @@ def takeOwnership(filename):
 @app.route('/getContacts', methods=['GET'])
 def readContacts():
     '''Function to read contacts'''
-    findCommand = "find ./static/mounted -name contacts2.db"
+    findCommand = "find /mnt/android -name contacts2.db"
     contactsPath = subprocess.check_output('echo {} | sudo -S {}'.format(password,findCommand), shell=True)
     contactsPath = (contactsPath.decode('utf-8')).split('\n')
     contactsPath = contactsPath[0]
@@ -322,8 +352,8 @@ def readContacts():
         
 @app.route('/getSMS', methods=['GET'])
 def readSMS():
-    '''Function to read SMS (For Android 5.0'''
-    findCommand = "find ./static/mounted -name mmssms.db"
+    '''Function to read SMS (For Android 5.0)'''
+    findCommand = "find /mnt/android -name mmssms.db"
     # smsPath = subprocess.check_output('echo {} | sudo -S {}'.format(password,findCommand), shell=True)
     smsPath = executeCommand(password, findCommand)
     # Copy file
@@ -340,8 +370,8 @@ def readSMS():
     metadata = db.MetaData()
     
     # Get table data
-    messages = db.Table('messages', metadata, autoload=True, autoload_with=engine)
-    select_stmt = select([messages.c.address, messages.c.content, messages.c.date, messages.c.date_sent],
+    messages = db.Table('sms', metadata, autoload=True, autoload_with=engine)
+    select_stmt = select([messages.c.address, messages.c.body, messages.c.date, messages.c.date_sent],
     group_by=[messages.c.address],
     order_by=[messages.c.address])
     # Execute query
@@ -364,7 +394,7 @@ def readSMS():
 @app.route('/getLogs', methods=['GET'])
 def getCallLogs():
     '''Get call logs'''
-    findCmd = 'find ./static/mounted -name calllog.db'
+    findCmd = 'find /mnt/android -name calllog.db'
     logsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + logsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
@@ -397,7 +427,7 @@ def getCallLogs():
 @app.route('/getWhatsappLocations', methods=['GET'])
 def getCallLocations():
     '''Get whatsapp locations'''
-    findCmd = 'find ./static/mounted -name msgstore.db'
+    findCmd = 'find /mnt/android -name msgstore.db'
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
@@ -434,7 +464,7 @@ def getCallLocations():
 @app.route('/getLocations', methods=['GET'])
 def getLocations():
     '''Get locations'''
-    findCmd = 'find ./static/mounted -name gmm_sync.db'
+    findCmd = 'find /mnt/android -name gmm_sync.db'
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
@@ -484,7 +514,7 @@ def index():
 
 @app.route('/getFacebookUserName', methods=['GET'])
 def getFacebookUserName():
-    findCmd = 'find ./static/mounted -name app_gatekeepers'
+    findCmd = 'find /mnt/android -name app_gatekeepers'
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp -r ' + locationsPath +     ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
@@ -492,9 +522,9 @@ def getFacebookUserName():
     y = os.getcwd()
     print (y,"****************")
     
-    # copyCommand = 'chown aizazsharif:aizazsharif ' + os.getcwd() + '/app_gatekeepers/users/'  +  ' \"' + os.getcwd() + '\"'
-    # executeCommand(password, copyCommand)
-    takeOwnership('/app_gatekeepers/users/')
+    copyCommand = 'chown aizazsharif:aizazsharif ' + os.getcwd() + '/app_gatekeepers/users/'  +  ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
+    #takeOwnership('/app_gatekeepers/users/')
     
     copyCommand = 'ls ' + os.getcwd() + '/app_gatekeepers/users/'
     x=executeCommand(password, copyCommand)
@@ -508,7 +538,7 @@ def getFacebookUserName():
 
 @app.route('/getFacebookContacts', methods=['GET'])
 def getFacebookContacts():
-    findCmd = 'find ./static/mounted -name contacts_db2'
+    findCmd = 'find /mnt/android -name contacts_db2'
     locationsPath = executeCommand(password,findCmd)
     print (locationsPath,"***********")
 
@@ -552,7 +582,7 @@ def getFacebookContacts():
 
 @app.route('/getWhatsappContacts', methods=['GET'])
 def getWhatsappContacts():
-    findCmd = 'find ./static/mounted -name wa.db'
+    findCmd = 'find /mnt/android -name wa.db'
     locationsPath = executeCommand(password,findCmd)
     print (locationsPath,"***********")
 
@@ -594,7 +624,7 @@ def getWhatsappContacts():
 @app.route('/getWhatsappMessages', methods=['GET'])
 def getWhatsappMessages():
  
-    findCmd = 'find ./static/mounted -name msgstore.db'
+    findCmd = 'find /mnt/android -name msgstore.db'
     locationsPath = executeCommand(password,findCmd)
     print (locationsPath,"***********")
 
@@ -645,7 +675,7 @@ def getWhatsappMessages():
      
 @app.route('/getWhatsappGroups', methods=['GET'])
 def getWhatsappGroups():
-    findCmd = 'find ./static/mounted -name msgstore.db'
+    findCmd = 'find /mnt/android -name msgstore.db'
     locationsPath = executeCommand(password,findCmd)
     print (locationsPath,"***********")
 
@@ -778,11 +808,11 @@ def getDeviceInfo():
     
 
     # IMEI
-    cmd = "adb shell service call iphonesubinfo 1 | awk -F \"'\" '{print $2}' | sed '1 d' | tr -d '.' | awk '{print}' ORS="
-    IMEI = (co(cmd, shell=True)).decode('utf-8')
-    # IMEI = co(['adb', 'shell', 'service', 'call','iphonesubinfo','16',
-    # '|','busybox','awk','-F','\"\'\"','\'{print $2}\'','|','busybox','sed'
-    #     ,'\'s/[^0-9A-F]*//g\'','|','busybox','tr','-d','\'\n\'','&&','echo']).decode('UTF-8')
+    #cmd = "adb shell service call iphonesubinfo 1 | awk -F \"'\" '{print $2}' | sed '1 d' | tr -d '.' | awk '{print}' ORS="
+    #IMEI = (co(cmd, shell=True)).decode('utf-8')
+    IMEI = co(['adb', 'shell', 'service', 'call','iphonesubinfo','16',
+     '|','busybox','awk','-F','\"\'\"','\'{print $2}\'','|','busybox','sed'
+         ,'\'s/[^0-9A-F]*//g\'','|','busybox','tr','-d','\'\n\'','&&','echo']).decode('UTF-8')
     IMEI=IMEI.strip("\r\n")
     try:
         print(" IMEI: " + IMEI)
@@ -806,7 +836,7 @@ def getDeviceInfo():
 def audioSearch():
     '''Return list of audio files'''
     # audioList = []  # This will have all the files
-    audioFileList = ad.getFiles('./static/mounted')    # Call the function to get files
+    audioFileList = ad.getFiles('/mnt/android')    # Call the function to get files
     
     # Iterate over the list of files to convert them to table format
     # for x in audioFileList:
@@ -822,7 +852,7 @@ def audioSearch():
 def videoSearch():
     '''Return list of video files'''
     # videoList = []  # This will have all the files
-    videoFileList = vd.getFiles('./static/mounted')    # Call the function to get files
+    videoFileList = vd.getFiles('/mnt/android')    # Call the function to get files
     
     # Iterate over the list of files to convert them to table format
     # for x in videoFileList:
@@ -839,7 +869,7 @@ def videoSearch():
 def docSearch():
     '''Return list of documents'''
     # docList = []  # This will have all the files
-    docFileList = ds.getFiles('./static/mounted')    # Call the function to get files
+    docFileList = ds.getFiles('/mnt/android')    # Call the function to get files
     
     # Iterate over the list of files to convert them to table format
     # for x in docFileList:
@@ -855,7 +885,7 @@ def docSearch():
 def picSearch():
     '''Return list of pictures'''
     # picList = []  # This will have all the files
-    picFileList = ps.getFiles('./static/mounted')    # Call the function to get files
+    picFileList = ps.getFiles('/mnt/android')    # Call the function to get files
     
     # Iterate over the list of files to convert them to table format
     # for x in picFileList:
@@ -868,14 +898,239 @@ def picSearch():
     return jsonify(picFileList)
 
 
+def find(key, dictionary):
+    for k, v in dictionary.items():
+        if k == key:
+            yield v
+        elif isinstance(v, dict):
+            for result in find(key, v):
+                yield result
+        elif isinstance(v, list):
+            for d in v:
+                for result in find(key, d):
+                    yield result
+
+def date_from_webkit(webkit_timestamp):
+    epoch_start = datetime.datetime(1601,1,1)
+    delta = datetime.timedelta(microseconds=int(webkit_timestamp))
+    print (epoch_start + delta)
+    return epoch_start + delta
+     
+
+@app.route('/getChromeBookmarks', methods=['GET'])
+def getChromeBookmarks():
+    findCmd = 'find /mnt/android -name Bookmarks'
+    locationsPath = executeCommand(password,findCmd)
+    print (locationsPath,"***********")
+
+   
+    copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
+    executeCommand(password, copyCommand)
+    textfile = open('result','w')
+
+    takeOwnership('Bookmarks')
+    filee=open('Bookmarks','r')
+    for line in filee.readlines():
+        textfile.write(line)
+        if "folder" in line:
+            textfile.writelines(',')
+            textfile.write('\n "url": "None" ')
+    textfile.close()    
+    with open('result') as data_file:    
+        data = json.load(data_file)
+    children=list(find('children', data))
+
     
+    date_added=nested_lookup('date_added', children)
+    name=nested_lookup('name', children)
+    url=nested_lookup('url', children)
+    print ("date_added :",len(date_added))
+    print ("name :",len(name))
+    print ("url :",len(url))
+    #print (json.dumps(children, indent=2, sort_keys=True))
+
+    for i in range(len(date_added)):
+        print (date_added[i], " ", name[i]," ",url[i])
+        date_added[i]=date_from_webkit(date_added[i])
+    friendslist=[]
+    for i in range(len(date_added)):
+        tempLog = dict(timestamp=date_added[i],name=name[i],url=url[i])
+        
+        friendslist.append(tempLog)
+
+    table = ChromeBookmarksTable(friendslist)
+    return jsonify(table)
+
+
+@app.route('/getChromeLogin', methods=['GET'])
+def getChromeLogin():
+    findCmd = 'find /mnt/android -name Login\ Data'
+    locationsPath = executeCommand(password,findCmd)
+    
+    
+    copyCommand = 'cp ' + locationsPath[:-10] + "Login\ Data" +" " + os.getcwd()    
+    executeCommand(password, copyCommand)
+
+    chownCommand = 'chown aizazsharif:aizazsharif Login\ Data'
+    executeCommand(password, chownCommand)
+
+    # Connect to database
+    engine = create_engine('sqlite:///Login Data')   
+    connection = engine.connect()
+    metadata = db.MetaData()
+    
+    rows = db.Table('logins', metadata, autoload=True, autoload_with=engine)
+    select_stmt = select([rows.c.action_url , rows.c.username_value ,rows.c.password_value, rows.c.times_used])
+    # Execute query
+    result = connection.execute(select_stmt)
+    finalResult = result.fetchall()
+    #finalResult=finalResult[:50]
+    
+    Result = []
+
+    for x in finalResult:
+        # tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
+        tempLog = dict(url=x[0],username=x[1],password=(x[2][:2].decode("utf-8")+"..."),times_used=x[3])
+        Result.append(tempLog)
+
+    table = ChromeLoginTable(Result)
+    return jsonify(table)
+    
+    #return "yes"
+
+@app.route('/getChromeHistory', methods=['GET'])
+def getChromeHistory():
+    findCmd = 'find /mnt/android -name History'
+    locationsPath = executeCommand(password,findCmd)
+    print (locationsPath,"**************")
+    
+    copyCommand = 'cp ' + locationsPath +" " + os.getcwd()    
+    executeCommand(password, copyCommand)
+    takeOwnership('History')
+    
+    # Connect to database
+    engine = create_engine('sqlite:///History')   
+    connection = engine.connect()
+    metadata = db.MetaData()
+    
+    rows = db.Table('urls', metadata, autoload=True, autoload_with=engine)
+    select_stmt = select([rows.c.url , rows.c.title ,rows.c.last_visit_time])
+    # Execute query
+    result = connection.execute(select_stmt)
+    finalResult = result.fetchall()
+    finalResult=finalResult[:20]
+    
+    Result = []
+
+    for x in finalResult:
+        # tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
+        tempLog = dict(url=str(x[0])[:25],title=x[1],last_visit_time=date_from_webkit(x[2]))
+        Result.append(tempLog)
+
+    table = ChromeLoginHistory(Result)
+    return jsonify(table)
+    
+    
+@app.route('/getChromeWebData', methods=['GET'])
+def getChromeWebData():
+    #findCmd = 'find /mnt/android -name Web\ Data'
+    locationsPath = '/mnt/android/data/com.android.chrome/app_chrome/Default/'
+    #locationsPath = executeCommand(password,findCmd)
+    
+    
+    copyCommand = 'cp ' + locationsPath + "Web\ Data" +" " + os.getcwd()    
+    executeCommand(password, copyCommand)
+
+    chownCommand = 'chown aizazsharif:aizazsharif Web\ Data'
+    executeCommand(password, chownCommand)
+
+    # Connect to database
+    engine = create_engine('sqlite:///Web Data')   
+    connection = engine.connect()
+    metadata = db.MetaData()
+     
+    autofill = [] 
+    #For autofill email
+    rows = db.Table('autofill_profile_emails', metadata, autoload=True, autoload_with=engine)
+    select_stmt = select([rows.c.email ])
+    result = connection.execute(select_stmt)
+    finalResult = result.fetchall()
+    
+    for x in finalResult:
+
+        autofill.append("Email : "+str(x) )
+
+    #For autofill names
+    rows = db.Table('autofill_profile_names', metadata, autoload=True, autoload_with=engine)
+    select_stmt = select([rows.c.first_name,rows.c.last_name ])
+    result = connection.execute(select_stmt)
+    finalResult = result.fetchall()
+    
+    for x in finalResult:
+
+        autofill.append("Name : "  +str(x[0]) + " " + str(x[1]) )
+ 
+
+    #For autofill phone number
+    rows = db.Table('autofill_profile_phones', metadata, autoload=True, autoload_with=engine)
+    select_stmt = select([rows.c.number ])
+    result = connection.execute(select_stmt)
+    finalResult = result.fetchall()
+    
+    for x in finalResult:
+
+        autofill.append("Phone Number : "+str(x) )
+ 
+    #For autofill profiles
+    rows = db.Table('autofill_profiles', metadata, autoload=True, autoload_with=engine)
+    select_stmt = select([rows.c.city ])
+    result = connection.execute(select_stmt)
+    finalResult = result.fetchall()
+    
+    for x in finalResult:
+
+        autofill.append("City : "+str(x) )
+
+    rows = db.Table('autofill_profiles', metadata, autoload=True, autoload_with=engine)
+    select_stmt = select([rows.c.zipcode ])
+    result = connection.execute(select_stmt)
+    finalResult = result.fetchall()
+    
+    for x in finalResult:
+
+        autofill.append("Zipcode : "+str(x) )
+  
+    rows = db.Table('autofill_profiles', metadata, autoload=True, autoload_with=engine)
+    select_stmt = select([rows.c.country_code ])
+    result = connection.execute(select_stmt)
+    finalResult = result.fetchall()
+    
+    for x in finalResult:
+
+        autofill.append("Country Code : "+str(x) )
+ 
+    
+    
+    print (autofill)
+    
+    info=[]
+    for x in autofill:
+        tempLog = dict(autofill=x)
+        info.append(tempLog)
+
+    table = AutofillProfileTable(info)
+    
+    return jsonify(table)
+
+
 def main():
+    
     try:
         cleanFirefox()
     except Exception as e:
         print(e)
+        
     socketio.run(app)
-
-
+    
 if __name__ == "__main__":
     main()
