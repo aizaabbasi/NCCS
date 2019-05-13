@@ -373,3 +373,12 @@ $("#metadata").click(function() {
         $("#contactsTable").html("")
     });
 });
+
+// adb backup and restore 
+$("#getBackupRestore").click(function() {
+    $("#table_div").html("")
+    $("#table_div").show()
+    $.get("/getBackupRestore", function(data, status) {    // Send GET request to 'getBackupRestore' URL
+        $("#contactsTable").html("")
+    });
+});
