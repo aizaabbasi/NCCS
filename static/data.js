@@ -352,3 +352,24 @@ $("#skypeMessages").click(function(e) {
 
     });
 });
+
+// GPS from Exif
+$("#imagelocations").click(function() {
+    $("#table_div").hide()
+    $.get("/getImageLocations", function(data, status) {
+        var path = "<iframe src=/static/ImagesMap.html style=\"width:100%; height:500px\"></iframe>"
+        path = path.replace(/[^\x20-\x7E]/g, '');
+        console.log(path)
+        $("#contactsTable").html(path)
+    });
+});
+
+
+// metadata from Exif 
+$("#metadata").click(function() {
+    $("#table_div").html("")
+    $("#table_div").show()
+    $.get("/getMetadata", function(data, status) {    // Send GET request to 'getMetadata' URL
+        $("#contactsTable").html("")
+    });
+});
