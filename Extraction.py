@@ -14,7 +14,6 @@ import readline
 from flask_table import Table, Col
 import numpy as np
 from gmplot import gmplot
-from datetime import datetime
 import datetime
 
 import time
@@ -323,7 +322,7 @@ def takeOwnership(filename):
 @app.route('/getContacts', methods=['GET'])
 def readContacts():
     '''Function to read contacts'''
-    findCommand = "find /mnt/android -name contacts2.db"
+    findCommand = "find ./static/mounted -name contacts2.db"
     contactsPath = subprocess.check_output('echo {} | sudo -S {}'.format(password,findCommand), shell=True)
     contactsPath = (contactsPath.decode('utf-8')).split('\n')
     contactsPath = contactsPath[0]
@@ -378,7 +377,7 @@ def readContacts():
 @app.route('/getSMS', methods=['GET'])
 def readSMS():
     '''Function to read SMS (For Android 5.0)'''
-    findCommand = "find /mnt/android -name mmssms.db"
+    findCommand = "find ./static/mounted -name mmssms.db"
     # smsPath = subprocess.check_output('echo {} | sudo -S {}'.format(password,findCommand), shell=True)
     smsPath = executeCommand(password, findCommand)
     # Copy file
@@ -407,7 +406,7 @@ def readSMS():
     smsList = []
     for x in finalResult:
         # tempSms = {'Address':x.address, 'Content':x.body, 'Date':x.date,'Sent':x.date_sent}
-        tempSms = dict(number=x[0],content=x[1],dateReceived=datetime.fromtimestamp(x[2]/1e3),dateSent=datetime.fromtimestamp(x[3]/1e3))
+        tempSms = dict(number=x[0],content=x[1],dateReceived=datetime.datetime.fromtimestamp(x[2]/1e3),dateSent=datetime.datetime.fromtimestamp(x[3]/1e3))
         smsList.append(tempSms)
 
 
@@ -419,7 +418,7 @@ def readSMS():
 @app.route('/getLogs', methods=['GET'])
 def getCallLogs():
     '''Get call logs'''
-    findCmd = 'find /mnt/android -name calllog.db'
+    findCmd = 'find ./static/mounted -name calllog.db'
     logsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + logsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
@@ -441,7 +440,7 @@ def getCallLogs():
     callLogsList = []
     for x in finalResult:
         # tempLog = {'Name':x.name,'Number':x.number,'Date':x.date,'Duration':x.duration}
-        tempLog = dict(name=x[0],number=x[1],date=datetime.fromtimestamp(x[2]/1e3),duration=x[3])
+        tempLog = dict(name=x[0],number=x[1],date=datetime.datetime.fromtimestamp(x[2]/1e3),duration=x[3])
         callLogsList.append(tempLog)
 
     table = CallLogsTable(callLogsList)
@@ -452,7 +451,7 @@ def getCallLogs():
 @app.route('/getWhatsappLocations', methods=['GET'])
 def getCallLocations():
     '''Get whatsapp locations'''
-    findCmd = 'find /mnt/android -name msgstore.db'
+    findCmd = 'find ./static/mounted -name msgstore.db'
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
@@ -489,7 +488,7 @@ def getCallLocations():
 @app.route('/getLocations', methods=['GET'])
 def getLocations():
     '''Get locations'''
-    findCmd = 'find /mnt/android -name gmm_sync.db'
+    findCmd = 'find ./static/mounted -name gmm_sync.db'
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp ' + locationsPath + ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
@@ -539,7 +538,7 @@ def index():
 
 @app.route('/getFacebookUserName', methods=['GET'])
 def getFacebookUserName():
-    findCmd = 'find /mnt/android -name app_gatekeepers'
+    findCmd = 'find ./static/mounted -name app_gatekeepers'
     locationsPath = executeCommand(password,findCmd)
     copyCommand = 'cp -r ' + locationsPath +     ' \"' + os.getcwd() + '\"'
     executeCommand(password, copyCommand)
@@ -547,9 +546,9 @@ def getFacebookUserName():
     y = os.getcwd()
     print (y,"****************")
     
-    copyCommand = 'chown aizazsharif:aizazsharif ' + os.getcwd() + '/app_gatekeepers/users/'  +  ' \"' + os.getcwd() + '\"'
-    executeCommand(password, copyCommand)
-    #takeOwnership('/app_gatekeepers/users/')
+    # copyCommand = 'chown aizazsharif:aizazsharif ' + os.getcwd() + '/app_gatekeepers/users/'  +  ' \"' + os.getcwd() + '\"'
+    # executeCommand(password, copyCommand)
+    takeOwnership('/app_gatekeepers/users/')
     
     copyCommand = 'ls ' + os.getcwd() + '/app_gatekeepers/users/'
     x=executeCommand(password, copyCommand)
@@ -563,7 +562,7 @@ def getFacebookUserName():
 
 @app.route('/getFacebookContacts', methods=['GET'])
 def getFacebookContacts():
-    findCmd = 'find /mnt/android -name contacts_db2'
+    findCmd = 'find ./static/mounted -name contacts_db2'
     locationsPath = executeCommand(password,findCmd)
     print (locationsPath,"***********")
 
@@ -607,7 +606,7 @@ def getFacebookContacts():
 
 @app.route('/getWhatsappContacts', methods=['GET'])
 def getWhatsappContacts():
-    findCmd = 'find /mnt/android -name wa.db'
+    findCmd = 'find ./static/mounted -name wa.db'
     locationsPath = executeCommand(password,findCmd)
     print (locationsPath,"***********")
 
@@ -636,20 +635,20 @@ def getWhatsappContacts():
     table = WhatsappContactsTable(friendslist)
     return jsonify(table)
 
-    ''' 
-    for x in finalResult:
-        if (x.display_name != 0) or (x.number) or (x.status!=0):
-           tempLoc = {'Display Name':(x.display_name),'Number':(x.number) , 'Status':(x.status)}
-           friendslist.append(tempLoc)
-    friendslist=friendslist[:50]
-    return jsonify({'contactlist':friendslist})     # Return JSON    
-    #return locationsPath
-    '''
+    
+    # for x in finalResult:
+    #     if (x.display_name != 0) or (x.number) or (x.status!=0):
+    #        tempLoc = {'Display Name':(x.display_name),'Number':(x.number) , 'Status':(x.status)}
+    #        friendslist.append(tempLoc)
+    # friendslist=friendslist[:50]
+    # return jsonify({'contactlist':friendslist})     # Return JSON    
+    # #return locationsPath
+    
 
 @app.route('/getWhatsappMessages', methods=['GET'])
 def getWhatsappMessages():
  
-    findCmd = 'find /mnt/android -name msgstore.db'
+    findCmd = 'find ./static/mounted -name msgstore.db'
     locationsPath = executeCommand(password,findCmd)
     print (locationsPath,"***********")
 
@@ -688,19 +687,17 @@ def getWhatsappMessages():
     print (table)
     return jsonify(table)
 
-
-    '''
-    for x in finalResult:
-        if (x.key_remote_jid != 0):
-            tempLoc = {'Contact ID':(x.key_remote_jid)}
-            friendslist.append(tempLoc)
+    # for x in finalResult:
+    #     if (x.key_remote_jid != 0):
+    #         tempLoc = {'Contact ID':(x.key_remote_jid)}
+    #         friendslist.append(tempLoc)
     
-    return jsonify({'contactlist':friendslist})     # Return JSON
-    '''
+    # return jsonify({'contactlist':friendslist})     # Return JSON
+    
      
 @app.route('/getWhatsappGroups', methods=['GET'])
 def getWhatsappGroups():
-    findCmd = 'find /mnt/android -name msgstore.db'
+    findCmd = 'find ./static/mounted -name msgstore.db'
     locationsPath = executeCommand(password,findCmd)
     print (locationsPath,"***********")
 
@@ -730,15 +727,13 @@ def getWhatsappGroups():
     table = WhatsappGroupsTable(Result)
     return jsonify(table)
 
+    # for x in finalResult:
+    #     if (x.key_remote_jid != 0) or (x.subject) or (x.creation!=0) or (x.data != 0):
+    #         tempLoc = {'Contact ID':(x.key_remote_jid),'Group Name':(x.subject) , 'Timestamp':(x.creation), 'Text':(x.data)}
+    #         friendslist.append(tempLoc)
+    # friendslist=friendslist[:50]
+    # return jsonify({'contactlist':friendslist})     # Return JSON
     
-    '''    
-    for x in finalResult:
-        if (x.key_remote_jid != 0) or (x.subject) or (x.creation!=0) or (x.data != 0):
-            tempLoc = {'Contact ID':(x.key_remote_jid),'Group Name':(x.subject) , 'Timestamp':(x.creation), 'Text':(x.data)}
-            friendslist.append(tempLoc)
-    friendslist=friendslist[:50]
-    return jsonify({'contactlist':friendslist})     # Return JSON
-    '''
 
 
 @app.route('/getSyncedAccounts', methods=['GET'])
@@ -764,11 +759,9 @@ def getSyncedAccounts():
     table = SyncAccountsTable(friendslist)
     return jsonify(table)
 
-    
-    '''
-    print (len(ACCOUNTS))    
-    return (jsonify(ACCOUNTS))
-    '''
+    # print (len(ACCOUNTS))    
+    # return (jsonify(ACCOUNTS))
+
 
 @app.route('/getDeviceInfo', methods=['GET'])
 def getDeviceInfo():   
@@ -977,7 +970,7 @@ def date_from_webkit(webkit_timestamp):
 
 @app.route('/getChromeBookmarks', methods=['GET'])
 def getChromeBookmarks():
-    findCmd = 'find /mnt/android -name Bookmarks'
+    findCmd = 'find ./static/mounted -name Bookmarks'
     locationsPath = executeCommand(password,findCmd)
     print (locationsPath,"***********")
 
@@ -1022,15 +1015,16 @@ def getChromeBookmarks():
 
 @app.route('/getChromeLogin', methods=['GET'])
 def getChromeLogin():
-    findCmd = 'find /mnt/android -name Login\ Data'
+    findCmd = "find ./static/mounted -name 'Login Data' | grep chrome"
     locationsPath = executeCommand(password,findCmd)
     
     
-    copyCommand = 'cp ' + locationsPath[:-10] + "Login\ Data" +" " + os.getcwd()    
+    copyCommand = 'cp "' + locationsPath + '" "' + os.getcwd() + '"'    
     executeCommand(password, copyCommand)
 
-    chownCommand = 'chown aizazsharif:aizazsharif Login\ Data'
-    executeCommand(password, chownCommand)
+    # chownCommand = 'chown aizazsharif:aizazsharif Login\ Data'
+    # executeCommand(password, chownCommand)
+    takeOwnership('"Login Data"')
 
     # Connect to database
     engine = create_engine('sqlite:///Login Data')   
@@ -1058,11 +1052,11 @@ def getChromeLogin():
 
 @app.route('/getChromeHistory', methods=['GET'])
 def getChromeHistory():
-    findCmd = 'find /mnt/android -name History'
+    findCmd = 'find ./static/mounted -name History | grep chrome'
     locationsPath = executeCommand(password,findCmd)
     print (locationsPath,"**************")
     
-    copyCommand = 'cp ' + locationsPath +" " + os.getcwd()    
+    copyCommand = 'cp "' + locationsPath + '" "' + os.getcwd() + '"'    
     executeCommand(password, copyCommand)
     takeOwnership('History')
     
@@ -1091,16 +1085,17 @@ def getChromeHistory():
     
 @app.route('/getChromeWebData', methods=['GET'])
 def getChromeWebData():
-    #findCmd = 'find /mnt/android -name Web\ Data'
-    locationsPath = '/mnt/android/data/com.android.chrome/app_chrome/Default/'
+    #findCmd = 'find ./static/mounted -name Web\ Data'
+    locationsPath = './static/mounted/data/com.android.chrome/app_chrome/Default/'
     #locationsPath = executeCommand(password,findCmd)
     
     
-    copyCommand = 'cp ' + locationsPath + "Web\ Data" +" " + os.getcwd()    
+    copyCommand = 'cp "' + locationsPath + "Web Data" + '" "' + os.getcwd() + '"'    
     executeCommand(password, copyCommand)
 
-    chownCommand = 'chown aizazsharif:aizazsharif Web\ Data'
-    executeCommand(password, chownCommand)
+    # chownCommand = 'chown aizazsharif:aizazsharif Web\ Data'
+    # executeCommand(password, chownCommand)
+    takeOwnership('"Web Data"')
 
     # Connect to database
     engine = create_engine('sqlite:///Web Data')   
