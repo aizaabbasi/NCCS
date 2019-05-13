@@ -49,11 +49,6 @@ $("#makeImage").click(function(e) {
 
         });
     });
-    // $.get("/makeImage", function(data, status) {
-    //     console.log(data)
-    //     // document.write(data)
-    //     $("#contactsTable").html(data)
-    // });
 });
 
 // Mount image
@@ -73,7 +68,6 @@ $("#contacts").click(function(e) {
     $("#table_div").hide()
     $.get("/getContacts", function(data, status) {
         console.log(data)
-        // document.write(data)
         $("#contactsTable").html(data)
     });
 });
@@ -174,19 +168,6 @@ $("#syncaccounts").click(function() {
     $.get("/getSyncedAccounts", function(data, status) {
         console.log(data)
         $("#contactsTable").html(data)
-            
-    //     var tbl=$("<table/>").attr("id","mytable");
-    //     $("#div1").append(tbl);
-    //     for(var i=0;i<data.length;i++)
-    //     {
-    //         var tr="<tr>";
-    //         var td1="<td>"+data[i]+"</td>";
-
-
-    //     $("#contactsTable").append(tr+td1); 
-
-    // }   
-      
         
     });
 });
@@ -208,25 +189,18 @@ $("#audio").click(function() {                          // Click handler for aud
     $("#table_div").show()
     $.get("/getAudioFiles", function(data, status) {    // Send GET request to 'getAudioFiles' URL
         $("#contactsTable").html("")
-        // $("#contactsTable").append('<table class="table table-striped">')
-        // $("#contactsTable").append("<thead> <tr> <th> File </th> </tr> </thead>")
-        // $("#contactsTable").append("<tbody>")
-        // console.log(data)
+        // Graph
+        var path = "<center><iframe src=/static/graphs/audio.png style=\"width:100%; height:500px\"></iframe></center>"
+        path = path.replace(/[^\x20-\x7E]/g, '');
+        console.log(path)
+        $("#contactsTable").html(path)
+        $("#table_div").append("<thead> <tr> <th> File </th> </tr> </thead>")
         for (i=0; i<data.length; i++)
         {
             var temp = encodeURI(data[i])
             path = "<a href= " + temp + ">" + data[i] + "</a>"
             $("#table_div").append("<tr><td>" + path + "</td></tr>");
-            // div = document.getElementById("contactsTable")
-            // $("#contactsTable").append("<tr>")
-            // $("#contactsTable").append("<td>")
-            // // div.insertAdjacentHTML( 'beforeend', path );
-            // $("#contactsTable").append(path)
-            // $("#contactsTable").append("</td>")
-            // $("#contactsTable").append("</tr>")
         }
-        // $("#contactsTable").append("</tbody>")
-        // $("#contactsTable").append("</table>")
 
     });
 });
@@ -238,25 +212,19 @@ $("#video").click(function() {                          // Click handler for aud
     $("#table_div").show()
     $.get("/getVideoFiles", function(data, status) {    // Send GET request to 'getVideoFiles' URL
         $("#contactsTable").html("")
-        // $("#contactsTable").append('<table class="table table-striped">')
-        // $("#contactsTable").append("<thead> <tr> <th> File </th> </tr> </thead>")
-        // $("#contactsTable").append("<tbody>")
+        // Graph
+        var path = "<center><iframe src=/static/graphs/videos.png style=\"width:100%; height:500px\"></iframe></center>"
+        path = path.replace(/[^\x20-\x7E]/g, '');
+        console.log(path)
+        $("#contactsTable").html(path)
+        $("#table_div").append("<thead> <tr> <th> File </th> </tr> </thead>")
         // console.log(data)
         for (i=0; i<data.length; i++)
         {
             var temp = encodeURI(data[i])
             path = "<a href= " + temp + ">" + data[i] + "</a>"
             $("#table_div").append("<tr><td>" + path + "</td></tr>");
-            // div = document.getElementById("contactsTable")
-            // $("#contactsTable").append("<tr>")
-            // $("#contactsTable").append("<td>")
-            // // div.insertAdjacentHTML( 'beforeend', path );
-            // $("#contactsTable").append(path)
-            // $("#contactsTable").append("</td>")
-            // $("#contactsTable").append("</tr>")
         }
-        // $("#contactsTable").append("</tbody>")
-        // $("#contactsTable").append("</table>")
 
     });
 });
@@ -266,25 +234,19 @@ $("#documents").click(function() {                          // Click handler for
     $("#table_div").show()
     $.get("/getDocuments", function(data, status) {    // Send GET request to 'getDocuments' URL
         $("#contactsTable").html("")
-        // $("#contactsTable").append('<table class="table table-striped">')
-        // $("#contactsTable").append("<thead> <tr> <th> File </th> </tr> </thead>")
-        // $("#contactsTable").append("<tbody>")
+        // Graph
+        var path = "<center><iframe src=/static/graphs/documents.png style=\"width:100%; height:500px\"></iframe></center>"
+        path = path.replace(/[^\x20-\x7E]/g, '');
+        console.log(path)
+        $("#contactsTable").html(path)
+        $("#table_div").append("<thead> <tr> <th> File </th> </tr> </thead>")
         // console.log(data)
         for (i=0; i<data.length; i++)
         {
             var temp = encodeURI(data[i])
             path = "<a href= " + temp + ">" + data[i] + "</a>"
             $("#table_div").append("<tr><td>" + path + "</td></tr>");
-            // div = document.getElementById("contactsTable")
-            // $("#contactsTable").append("<tr>")
-            // $("#contactsTable").append("<td>")
-            // // div.insertAdjacentHTML( 'beforeend', path );
-            // $("#contactsTable").append(path)
-            // $("#contactsTable").append("</td>")
-            // $("#contactsTable").append("</tr>")
         }
-        // $("#contactsTable").append("</tbody>")
-        // $("#contactsTable").append("</table>")
 
     });
 });
@@ -296,28 +258,31 @@ $("#pictures").click(function() {                          // Click handler for 
     $("#table_div").show()
     $.get("/getPictures", function(data, status) {    // Send GET request to 'getPictures' URL
         $("#contactsTable").html("")
-        // $("#contactsTable").append('<table class="table table-striped">')
-        // $("#contactsTable").append("<thead> <tr> <th> File </th> </tr> </thead>")
-        // $("#contactsTable").append("<tbody>")
-        // console.log(data)
+        // Graph
+        var path = "<center><iframe src=/static/graphs/pictures.png style=\"width:100%; height:500px\"></iframe></center>"
+        path = path.replace(/[^\x20-\x7E]/g, '');
+        console.log(path)
+        $("#contactsTable").html(path)
+        $("#table_div").append("<thead> <tr> <th> File </th> </tr> </thead>")
         for (i=0; i<data.length; i++)
         {
             var temp = encodeURI(data[i])
             path = "<a href= " + temp + ">" + data[i] + "</a>"
             $("#table_div").append("<tr><td>" + path + "</td></tr>");
-            // div = document.getElementById("contactsTable")
-            // $("#contactsTable").append("<tr>")
-            // $("#contactsTable").append("<td>")
-            // // div.insertAdjacentHTML( 'beforeend', path );
-            // $("#contactsTable").append(path)
-            // $("#contactsTable").append("</td>")
-            // $("#contactsTable").append("</tr>")
         }
-        // $("#contactsTable").append("</tbody>")
-        // $("#contactsTable").append("</table>")
-
     });
 });
+
+// Get Skype Contacts
+$("#skypeContacts").click(function(e) {
+    e.preventDefault()
+    $("#table_div").hide()
+    $.get("/getSkypeContacts", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+    });
+});
+
 // Chrome Bookmarks 
 $("#bookmarks").click(function() {
     $("#table_div").hide()
@@ -351,6 +316,16 @@ $("#history").click(function() {
 $("#webdata").click(function() {
     $("#table_div").hide()
     $.get("/getChromeWebData", function(data, status) {
+        console.log(data)
+        $("#contactsTable").html(data)
+
+
+
+// Get Skype Messages
+$("#skypeMessages").click(function(e) {
+    e.preventDefault()
+    $("#table_div").hide()
+    $.get("/getSkypeMessages", function(data, status) {
         console.log(data)
         $("#contactsTable").html(data)
 

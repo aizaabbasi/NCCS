@@ -29,6 +29,8 @@ import allPicSearch as ps
 import urllib
 import csv
 from nested_lookup import nested_lookup, get_occurrence_of_key, get_occurrence_of_value
+from os import listdir
+from os.path import isfile, join
 
 # Contacts table
 class ContactsTable(Table):
@@ -109,6 +111,7 @@ class AudioFiles(Table):
     classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
     audioFiles = Col('Files')
 
+
 # Chrome Bookmarks Table
 class ChromeBookmarksTable(Table):
     classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
@@ -135,6 +138,25 @@ class ChromeLoginHistory(Table):
 class AutofillProfileTable(Table):
     classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
     autofill = Col('Autofill Profile')
+
+# Skype Contacts Table
+class SkypeContacts(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    account = Col('Account')
+    name = Col('Name')
+    birthday = Col('Birthday')
+    city = Col('City')
+    country = Col('Country')
+    status = Col('Status')
+    phones = Col('Phones')
+
+# Skype Contacts Table
+class SkypeMessages(Table):
+    classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
+    account = Col('Account')
+    name = Col('Name')
+    message = Col('Message')
+
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -226,23 +248,26 @@ def makeImage():
 def getProgress():
     '''Function to get file writing progress'''
     # Get path of img file
-    path = os.getcwd()
-    filePath = path + '/android.img'
-    fileSize = os.path.getsize(filePath)        # Get size of img file
-    global partitionSize
-    partitionSize = int(partitionSize)
-    fileSize = int(fileSize)/1024               # Converting to KBs
-    # print("\n")
-    # Keep running till file writing is not complete
-    # while fileSize < partitionSize:
-    fileSize = os.path.getsize(filePath)        # Get size of img file
-    fileSize = int(fileSize)/1024
-    perc = (fileSize/partitionSize) * 100   # Get percentage
-    # perc = round(perc)
-    # perc = str(perc)
-    perc = ("%.1f" % perc)
-    # print("Progress: " + perc + "%", end='\r')
-    emit('progress', {'data': perc})
+    try:
+        path = os.getcwd()
+        filePath = path + '/android.img'
+        fileSize = os.path.getsize(filePath)        # Get size of img file
+        global partitionSize
+        partitionSize = int(partitionSize)
+        fileSize = int(fileSize)/1024               # Converting to KBs
+        # print("\n")
+        # Keep running till file writing is not complete
+        # while fileSize < partitionSize:
+        fileSize = os.path.getsize(filePath)        # Get size of img file
+        fileSize = int(fileSize)/1024
+        perc = (fileSize/partitionSize) * 100   # Get percentage
+        # perc = round(perc)
+        # perc = str(perc)
+        perc = ("%.1f" % perc)
+        # print("Progress: " + perc + "%", end='\r')
+        emit('progress', {'data': perc})
+    except:
+        pass
 
     # print("\nDone")
 
@@ -836,7 +861,15 @@ def getDeviceInfo():
 def audioSearch():
     '''Return list of audio files'''
     # audioList = []  # This will have all the files
-    audioFileList = ad.getFiles('/mnt/android')    # Call the function to get files
+
+    path = os.getcwd()
+    graphPath = path + "/static/graphs/"
+    if not os.path.isdir(graphPath):
+        os.mkdir(graphPath)
+
+    graphPath = graphPath + '/audio.png'
+    audioFileList = ad.getFiles('./static/mounted', graphPath, 'audio')    # Call the function to get files
+
     
     # Iterate over the list of files to convert them to table format
     # for x in audioFileList:
@@ -852,7 +885,15 @@ def audioSearch():
 def videoSearch():
     '''Return list of video files'''
     # videoList = []  # This will have all the files
-    videoFileList = vd.getFiles('/mnt/android')    # Call the function to get files
+
+    path = os.getcwd()
+    graphPath = path + "/static/graphs/"
+    if not os.path.isdir(graphPath):
+        os.mkdir(graphPath)
+
+    graphPath = graphPath + '/videos.png'
+    videoFileList = ad.getFiles('./static/mounted', graphPath, 'video')    # Call the function to get files
+
     
     # Iterate over the list of files to convert them to table format
     # for x in videoFileList:
@@ -869,7 +910,15 @@ def videoSearch():
 def docSearch():
     '''Return list of documents'''
     # docList = []  # This will have all the files
-    docFileList = ds.getFiles('/mnt/android')    # Call the function to get files
+
+    path = os.getcwd()
+    graphPath = path + "/static/graphs/"
+    if not os.path.isdir(graphPath):
+        os.mkdir(graphPath)
+    
+    graphPath = graphPath + '/documents.png'
+    docFileList = ad.getFiles('./static/mounted', graphPath, 'documents')    # Call the function to get files
+
     
     # Iterate over the list of files to convert them to table format
     # for x in docFileList:
@@ -885,7 +934,15 @@ def docSearch():
 def picSearch():
     '''Return list of pictures'''
     # picList = []  # This will have all the files
-    picFileList = ps.getFiles('/mnt/android')    # Call the function to get files
+
+    path = os.getcwd()
+    graphPath = path + "/static/graphs/"
+    if not os.path.isdir(graphPath):
+        os.mkdir(graphPath)
+
+    graphPath = graphPath + '/pictures.png'
+    picFileList = ad.getFiles('./static/mounted', graphPath, 'pictures')    # Call the function to get files
+
     
     # Iterate over the list of files to convert them to table format
     # for x in picFileList:
@@ -896,6 +953,7 @@ def picSearch():
     # return jsonify(table)                   # Return table
     # print(picFileList)
     return jsonify(picFileList)
+
 
 
 def find(key, dictionary):
@@ -1121,6 +1179,208 @@ def getChromeWebData():
     table = AutofillProfileTable(info)
     
     return jsonify(table)
+
+
+# Skype Contacts
+@app.route('/getSkypeContacts', methods=['GET'])
+def getSkypeContacts():
+    '''Get skype contacts'''
+    path = os.getcwd() + "/static/mounted/data/com.skype.raider/databases/"
+    files = [f for f in listdir(path) if isfile(join(path, f))]       # Read all files in directory
+    # List for excluding files that include a certain keywork
+    excludeList = ['google', 'aria', 'Aria', 'Call', 'appboy']
+    databaseFiles = []
+    # Filter out db files
+    for x in files:
+        if x.endswith('.db'):
+            databaseFiles.append(x)
+
+    filter1 = []
+    # Filter for database files
+    for x in databaseFiles:
+        filter = any(substring in x for substring in excludeList)       # Check for substrings from exclude list
+        if filter == False:
+            filter1.append(x)
+
+    contactsList = []
+    for x in filter1:
+        copyCommand = 'cp "' + path + x + '" \"' + os.getcwd() + '\"'
+        executeCommand(password, copyCommand)             # Copy files
+        takeOwnership(x)                                  # Take ownership
+
+        # Connect to database
+        engine = create_engine('sqlite:///' + x)   
+        connection = engine.connect()
+
+        metadata = db.MetaData()
+        # Get table data
+        profiles = db.Table('profilecachev8', metadata, autoload=True, autoload_with=engine)
+        select_stmt = select([profiles.c.nsp_data])
+    
+        # Execute query
+        result = connection.execute(select_stmt)
+        finalResult = result.fetchall()
+
+        accountName = x.replace('.db','')
+        
+        for res in finalResult:
+            res = res.nsp_data
+            res = json.loads(res)
+            name,birthday,city,country,mood,phones = None,None,None,None,None,[]
+
+            # Retrieve tags if they exist
+            name = checkKey(res,'displayNameOverride')
+            birthday = checkKey(res,'birthday')
+            city = checkKey(res,'city')
+            country = checkKey(res,'country')
+            mood = checkKey(res,'mood')
+            phones = checkKey(res,'phones')
+            if phones:
+                phones = parseSkypePhones(phones)
+            else:
+                phones = None
+            
+            tempContact = dict(account=accountName, name=name, birthday=birthday, city=city, country=country, status=mood, phones=phones)
+            contactsList.append(tempContact)
+
+    table = SkypeContacts(contactsList)
+    return jsonify(table)
+
+
+# Skype Messages
+@app.route('/getSkypeMessages', methods=['GET'])
+def getSkypeMessages():
+    '''Get skype messages'''
+    path = os.getcwd() + "/static/mounted/data/com.skype.raider/databases/"
+    files = [f for f in listdir(path) if isfile(join(path, f))]       # Read all files in directory
+    # List for excluding files that include a certain keywork
+    excludeList = ['google', 'aria', 'Aria', 'Call', 'appboy']
+    databaseFiles = []
+    # Filter out db files
+    for x in files:
+        if x.endswith('.db'):
+            databaseFiles.append(x)
+
+    filter1 = []
+    # Filter for database files
+    for x in databaseFiles:
+        filter = any(substring in x for substring in excludeList)       # Check for substrings from exclude list
+        if filter == False:
+            filter1.append(x)
+
+
+    # This part is for ID to display name resolution
+    contactsList = {}
+    for x in filter1:
+        copyCommand = 'cp "' + path + x + '" \"' + os.getcwd() + '\"'
+        executeCommand(password, copyCommand)             # Copy files
+        takeOwnership(x)                                  # Take ownership
+
+        # Connect to database
+        engine = create_engine('sqlite:///' + x)   
+        connection = engine.connect()
+
+        metadata = db.MetaData()
+        # Get table data
+        profiles = db.Table('profilecachev8', metadata, autoload=True, autoload_with=engine)
+        select_stmt = select([profiles.c.nsp_data])
+    
+        # Execute query
+        result = connection.execute(select_stmt)
+        finalResult = result.fetchall()
+  
+        for res in finalResult:
+            res = res.nsp_data
+            res = json.loads(res)
+            name = None
+
+            # Retrieve tags if they exist
+            mri = checkKey(res, 'mri')
+            name = checkKey(res,'displayNameOverride')
+            contactsList.update({mri:name})
+
+    ###########################################################################
+    messagesList = {}
+
+    for x in filter1:
+        # Connect to database
+        engine = create_engine('sqlite:///' + x)   
+        connection = engine.connect()
+
+        metadata = db.MetaData()
+        # Get table data
+        profiles = db.Table('messagesv12', metadata, autoload=True, autoload_with=engine)
+        select_stmt = select([profiles.c.nsp_data])
+    
+        # Execute query
+        result = connection.execute(select_stmt)
+        finalResult = result.fetchall()
+
+        accountName = x.replace('.db','')
+
+        # Initializing dictionary of empty conversations
+        for res in finalResult:
+            res = res.nsp_data
+            res = json.loads(res)
+            conversationLink = checkKey(res, '_serverMessages')[0]
+            conversationLink = conversationLink['conversationLink']
+            try:
+                messagesList.update({conversationLink:[]})
+            except:
+                pass
+        
+        # Get data
+        for res in finalResult:
+            res = res.nsp_data
+            res = json.loads(res)
+            creator,content = None,None
+            creator = checkKey(res,'creator')
+            content = checkKey(res,'content')
+            conversationLink = checkKey(res, '_serverMessages')[0]
+            conversationLink = conversationLink['conversationLink']
+            # ID to name resolution
+            for key, value in contactsList.items():
+                if key == creator:
+                    creator = value
+                    break            
+
+            # Group messages together
+            try:
+                tempMessage = dict(account=accountName, name=creator, message=content)
+                messagesList[conversationLink].append(tempMessage)
+            except:
+                pass
+
+    # Reverse list
+    for key, value in messagesList.items():
+        messagesList[key].reverse()
+
+    # Format for table
+    finalMessageList = []
+    for _, value in messagesList.items():
+        for val in value:
+            tempMsg = dict(account=val['account'], name=val['name'], message=val['message'])
+            finalMessageList.append(tempMsg)
+
+    # Table
+    table = SkypeMessages(finalMessageList)
+    return jsonify(table)
+
+def checkKey(jsonDump, key):
+    '''Check if key exists in json dump'''
+    try:
+        return jsonDump[key]
+    except:
+        return
+
+def parseSkypePhones(phones):
+    '''Parse list of Skype phone numbers'''
+    phoneList = []
+    # Get phone number from json dump
+    for x in phones:
+        phoneList.append(x['number'])
+
+    return phoneList
 
 
 def main():

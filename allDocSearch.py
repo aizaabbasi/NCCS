@@ -17,7 +17,7 @@ dir_path = path
 #count for total files
 
 
-def getFiles(dir_path):
+def getFiles(dir_path, graph_path):
 	'''Function to get miscellaneous files'''
 	num=count=0
 	cdoc=cdocx=cpdf=cpptx=cxlsx=cepub=0
@@ -126,7 +126,7 @@ def getFiles(dir_path):
 					#csvobj.write(row)
 
 			else:	count=count+1
-	return fileList
+	# return fileList
 
 
 	#print ("\nTotal files found here : "+str(cdoc)+ " plus " +str(cdocx)+ " plus " +str(cpdf)+ " plus " +str(cpptx)+ " plus " +str(cxlsx)+ " plus " +str(cepub)+" equals "+str(num), file=file_obj)
