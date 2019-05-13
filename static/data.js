@@ -64,7 +64,7 @@ $("#mountImage").click(function(e) {
 
 // Get Contacts
 $("#contacts").click(function(e) {
-    e.preventDefault()
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").hide()
     $.get("/getContacts", function(data, status) {
         console.log(data)
@@ -73,7 +73,8 @@ $("#contacts").click(function(e) {
 });
 
 // Get SMS
-$("#sms").click(function() {
+$("#sms").click(function(e) {
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").hide()
     $.get("/getSMS", function(data, status) {
         console.log(data)
@@ -84,7 +85,8 @@ $("#sms").click(function() {
 });
 
 // Get call logs
-$("#call-logs").click(function() {
+$("#call-logs").click(function(e) {
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").hide()
     $.get("/getLogs", function(data, status) {
         console.log(data)
@@ -95,7 +97,8 @@ $("#call-logs").click(function() {
 });
 
 // Google Map locations
-$("#locations").click(function() {
+$("#locations").click(function(e) {
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").hide()
     $.get("/getLocations", function(data, status) {
         var path = "<iframe src=/static/map.html style=\"width:100%; height:500px\"></iframe>"
@@ -106,7 +109,8 @@ $("#locations").click(function() {
 });
 
 // Whatsapp locations
-$("#whatsappLocations").click(function() {
+$("#whatsappLocations").click(function(e) {
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").hide()
     $.get("/getWhatsappLocations", function(data, status) {
         var path = "<iframe src=/static/WhatsappMap.html style=\"width:100%; height:500px\"></iframe>"
@@ -116,7 +120,8 @@ $("#whatsappLocations").click(function() {
     });
 });
 // Facebook Profile
-$("#facebookprofile").click(function() {
+$("#facebookprofile").click(function(e) {
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").hide()
     $.get("/getFacebookUserName", function(data, status) {
         console.log(data);
@@ -125,7 +130,8 @@ $("#facebookprofile").click(function() {
 });
 
 // Facebook Contacts
-$("#facebookcontacts").click(function() {
+$("#facebookcontacts").click(function(e) {
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").hide()
     $.get("/getFacebookContacts", function(data, status) {
         console.log(data)
@@ -136,7 +142,8 @@ $("#facebookcontacts").click(function() {
 });
 
 // Whatsapp Contacts
-$("#whatsappcontacts").click(function() {
+$("#whatsappcontacts").click(function(e) {
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").hide()
     $.get("/getWhatsappContacts", function(data, status) {
         console.log(data)
@@ -145,7 +152,8 @@ $("#whatsappcontacts").click(function() {
 });
 
 // Whatsapp Chat
-$("#whatsappmessages").click(function() {
+$("#whatsappmessages").click(function(e) {
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").hide()
     $.get("/getWhatsappMessages", function(data, status) {
         console.log(data)
@@ -154,7 +162,8 @@ $("#whatsappmessages").click(function() {
 });
 
 // Whatsapp Groups 
-$("#whatsappgroups").click(function() {
+$("#whatsappgroups").click(function(e) {
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").hide()
     $.get("/getWhatsappGroups", function(data, status) {
         console.log(data)
@@ -164,7 +173,8 @@ $("#whatsappgroups").click(function() {
 });
 
 // Synced Accounts 
-$("#syncaccounts").click(function() {
+$("#syncaccounts").click(function(e) {
+    e.preventDefault()          // Prevents going to top of the page
     $.get("/getSyncedAccounts", function(data, status) {
         console.log(data)
         $("#contactsTable").html(data)
@@ -173,7 +183,8 @@ $("#syncaccounts").click(function() {
 });
 
 // Device Info 
-$("#deviceinfo").click(function() {
+$("#deviceinfo").click(function(e) {
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").hide()
     $.get("/getDeviceInfo", function(data, status) {
         console.log(data)
@@ -184,7 +195,8 @@ $("#deviceinfo").click(function() {
 });
 
 // Audio Files 
-$("#audio").click(function() {                          // Click handler for audio button
+$("#audio").click(function(e) {                          // Click handler for audio button
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").html("")
     $("#table_div").show()
     $.get("/getAudioFiles", function(data, status) {    // Send GET request to 'getAudioFiles' URL
@@ -207,7 +219,8 @@ $("#audio").click(function() {                          // Click handler for aud
 
 
 // Video Files 
-$("#video").click(function() {                          // Click handler for audio button
+$("#video").click(function(e) {                          // Click handler for audio button
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").html("")
     $("#table_div").show()
     $.get("/getVideoFiles", function(data, status) {    // Send GET request to 'getVideoFiles' URL
@@ -229,7 +242,8 @@ $("#video").click(function() {                          // Click handler for aud
     });
 });
 // Documents 
-$("#documents").click(function() {                          // Click handler for audio button
+$("#documents").click(function(e) {                          // Click handler for audio button
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").html("")
     $("#table_div").show()
     $.get("/getDocuments", function(data, status) {    // Send GET request to 'getDocuments' URL
@@ -253,7 +267,8 @@ $("#documents").click(function() {                          // Click handler for
 
 
 // Pictures 
-$("#pictures").click(function() {                          // Click handler for audio button
+$("#pictures").click(function(e) {                          // Click handler for audio button
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").html("")
     $("#table_div").show()
     $.get("/getPictures", function(data, status) {    // Send GET request to 'getPictures' URL
@@ -284,7 +299,8 @@ $("#skypeContacts").click(function(e) {
 });
 
 // Chrome Bookmarks 
-$("#bookmarks").click(function() {
+$("#bookmarks").click(function(e) {
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").hide()
     $.get("/getChromeBookmarks", function(data, status) {
         console.log(data)
@@ -294,7 +310,8 @@ $("#bookmarks").click(function() {
 });
 
 // Login Data 
-$("#login").click(function() {
+$("#login").click(function(e) {
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").hide()
     $.get("/getChromeLogin", function(data, status) {
         console.log(data)
@@ -303,7 +320,8 @@ $("#login").click(function() {
     });
 });
 // Chrome Browser History 
-$("#history").click(function() {
+$("#history").click(function(e) {
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").hide()
     $.get("/getChromeHistory", function(data, status) {
         console.log(data)
@@ -313,11 +331,14 @@ $("#history").click(function() {
 });
 
 // Chrome Web Data 
-$("#webdata").click(function() {
+$("#webdata").click(function(e) {
+    e.preventDefault()          // Prevents going to top of the page
     $("#table_div").hide()
     $.get("/getChromeWebData", function(data, status) {
         console.log(data)
         $("#contactsTable").html(data)
+    });
+});
 
 
 
