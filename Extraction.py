@@ -31,6 +31,9 @@ from nested_lookup import nested_lookup, get_occurrence_of_key, get_occurrence_o
 from os import listdir
 from os.path import isfile, join
 
+import getgps as gg
+import metadata as em
+
 # Contacts table
 class ContactsTable(Table):
     classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
