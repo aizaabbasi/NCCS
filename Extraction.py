@@ -1378,6 +1378,32 @@ def parseSkypePhones(phones):
     return phoneList
 
 
+@app.route('/getImageLocations', methods=['GET'])
+def getImageLocations():
+    '''Get image locations'''
+    
+    # Execute query
+    gg.dataHandler()
+    #Calling main function of script metadata.py
+    
+    return jsonify({'status':'OK'})
+    # return jsonify({'locations':locationsList})     # Return JSON  
+
+
+@app.route('/getExifMetadata', methods=['GET'])
+def getExifMetadata():
+    '''Get Exif Metadata'''
+    
+    # Execute query
+    em.main()
+	#Calling main function of script metadata.py
+   
+    return jsonify({'status':'OK'})
+    # return jsonify({'locations':locationsList})     # Return JSON  
+
+
+
+
 def main():
     
     try:
