@@ -31,6 +31,8 @@ from nested_lookup import nested_lookup, get_occurrence_of_key, get_occurrence_o
 from os import listdir
 from os.path import isfile, join
 
+from DataExtraction import get_backup as gb
+
 # Contacts table
 class ContactsTable(Table):
     classes = ['table', 'table-striped', 'table-bordered', 'table-hover', 'table-condensed']
@@ -1401,7 +1403,16 @@ def getExifMetadata():
     return jsonify({'status':'OK'})
     # return jsonify({'locations':locationsList})     # Return JSON  
 
-
+@app.route('/getBackupRestore', methods=['GET'])
+def getBackupRestore():
+    '''Get Backup and Restore'''
+    
+    # Execute query
+    gb.main()
+	#Calling main function of script get_backup.py
+   
+    return jsonify({'status':'OK'})
+    # return jsonify({'locations':locationsList})     # Return JSON 
 
 
 def main():
